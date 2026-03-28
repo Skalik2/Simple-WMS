@@ -22,28 +22,6 @@ window.addEventListener('load', async function () {
     }
 });
 
-async function fetchProducts() {
-    try {
-        const response = await fetch('/api/products');
-        const products = await response.json();
-        const tbody = document.getElementById('products-table-body');
-        tbody.innerHTML = '';
-        
-        products.forEach(p => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td class="px-4 py-2 font-medium">${p.id}</td>
-                <td class="px-4 py-2">${p.sku || '-'}</td>
-                <td class="px-4 py-2">${p.name || '-'}</td>
-                <td class="px-4 py-2 font-bold ${p.stock_quantity > 0 ? 'text-green-600' : 'text-red-600'}">${p.stock_quantity} szt.</td>
-            `;
-            tbody.appendChild(tr);
-        });
-    } catch (error) {
-        console.error("Błąd pobierania produktów:", error);
-    }
-}
-
 async function fetchDocuments() {
     try {
         const response = await fetch('/api/documents');
@@ -110,4 +88,65 @@ async function sendDocument() {
         const errorData = await response.json();
         alert(`Błąd: ${errorData.detail || 'Podczas zapisu dokumentu.'}`);
     }
+}
+
+
+
+function switchTab(tabName) {
+    document.getElementById('content-magazyn').classList.add('hidden');
+    document.getElementById('content-konfiguracja').classList.add('hidden');
+    
+    document.getElementById('tab-magazyn').className = 'px-6 py-2 font-medium text-gray-500';
+    document.getElementById('tab-konfiguracja').className = 'px-6 py-2 font-medium text-gray-500';
+
+    document.getElementById('content-' + tabName).classList.remove('hidden');
+    document.getElementById('tab-' + tabName).className = 'px-6 py-2 font-medium border-b-2 border-blue-600 text-blue-600';
+}
+
+async function createProduct() {
+    const sku = document.getElementById('newSku').value;
+    const name = document.getElementById('newName').value;
+
+    if(!sku || !name) return alert("Podaj SKU i nazwę!");
+
+    const response = await fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sku, name, stock_quantity: 0 })
+    });
+
+    if(response.ok) {
+        alert("Produkt dodany!");
+        document.getElementById('newSku').value = '';
+        document.getElementById('newName').value = '';
+        fetchProducts();
+    }
+}
+
+async function fetchProducts() {
+    try {
+        const response = await fetch('/api/products');
+        const products = await response.json();
+        
+        const tbody = document.getElementById('products-table-body');
+        if(tbody) tbody.innerHTML = products.map(p => `
+            <tr>
+                <td class="px-4 py-2">${p.id}</td>
+                <td class="px-4 py-2">${p.sku}</td>
+                <td class="px-4 py-2">${p.name}</td>
+                <td class="px-4 py-2 font-bold">${p.stock_quantity} szt.</td>
+            </tr>
+        `).join('');
+
+        const selects = ['productId', 'parentProductId', 'componentProductId'];
+        selects.forEach(id => {
+            const el = document.getElementById(id);
+            if(el) {
+                const current = el.value;
+                el.innerHTML = '<option value="">-- Wybierz produkt --</option>' + 
+                    products.map(p => `<option value="${p.id}">[${p.sku}] ${p.name}</option>`).join('');
+                el.value = current;
+            }
+        });
+    } catch (e) { console.error(e); }
 }
