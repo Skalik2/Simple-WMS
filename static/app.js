@@ -1,6 +1,11 @@
 window.addEventListener('load', async function () {
     try {
-        await Clerk.load();
+        await Clerk.load({
+            signInUrl: '/',
+            afterSignInUrl: '/',
+        });
+        
+        console.log("Clerk załadowany, użytkownik:", Clerk.user);
         
         if (Clerk.user) {
             document.getElementById('clerk-container').innerHTML = '';
@@ -53,11 +58,13 @@ async function fetchDocuments() {
             const dateObj = new Date(doc.created_at);
             
             const tr = document.createElement('tr');
+            const author = doc.created_by ? doc.created_by.substring(0, 12) + '...' : '-';
+
             tr.innerHTML = `
                 <td class="px-4 py-2 text-gray-500">#${doc.id}</td>
                 <td class="px-4 py-2">${typeBadge}</td>
                 <td class="px-4 py-2 text-gray-500">${dateObj.toLocaleString('pl-PL')}</td>
-                <td class="px-4 py-2 font-medium">${item.product_id}</td>
+                <td class="px-4 py-2 text-xs text-gray-400" title="${doc.created_by || ''}">${author}</td> <td class="px-4 py-2 font-medium">${item.product_id}</td>
                 <td class="px-4 py-2 font-medium ${isIncome ? 'text-green-600' : 'text-red-600'}">
                     ${isIncome ? '+' : '-'}${item.quantity}
                 </td>

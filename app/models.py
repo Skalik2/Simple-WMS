@@ -26,6 +26,7 @@ class Document(Base):
     id = Column(Integer, primary_key=True, index=True)
     type = Column(SQLEnum(DocType))
     created_at = Column(DateTime, default=datetime.utcnow)
+    created_by = Column(String, index=True, nullable=True)
     
     items = relationship("DocumentItem", back_populates="document")
 

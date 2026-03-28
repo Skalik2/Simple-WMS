@@ -2,14 +2,15 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from . import models, schemas
 
-def create_document(db: Session, doc_data: schemas.DocumentCreate):
+def create_document(db: Session, doc_data: schemas.DocumentCreate, user_id: str):
     product = db.query(models.Product).filter(models.Product.id == doc_data.product_id).first()
     
     if not product:
         raise HTTPException(status_code=404, detail=f"Produkt o ID {doc_data.product_id} nie istnieje.")
 
     db_document = models.Document(
-        type=doc_data.type
+        type=doc_data.type,
+        created_by=user_id
     )
     db.add(db_document)
     db.commit()

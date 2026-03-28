@@ -28,6 +28,7 @@ class DocumentResponse(BaseModel):
     id: int
     type: DocType
     created_at: datetime
+    created_by: str | None = None
     items: List[DocumentItemResponse] = []
 
     class Config:
