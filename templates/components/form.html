@@ -1,0 +1,26 @@
+<div class="bg-white p-6 rounded-lg shadow-md h-fit">
+    <h3 class="text-lg font-semibold border-b pb-2 mb-4">Dodaj nowy dokument</h3>
+    <div class="space-y-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Typ dokumentu</label>
+            <select id="docType" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                <option value="PZ">PZ - Przyjęcie Zewnętrzne (+)</option>
+                <option value="PW">PW - Przyjęcie Wewnętrzne (+)</option>
+                <option value="ZW">ZW - Zwrot Wewnętrzny (+)</option>
+                <option value="WZ">WZ - Wydanie Zewnętrzne (-)</option>
+                <option value="RW">RW - Rozchód Wewnętrzny (-)</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700">ID Produktu</label>
+            <input type="number" id="productId" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Ilość</label>
+            <input type="number" id="quantity" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+        </div>
+        <button onclick="sendDocument()" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded hover:bg-blue-700 transition">
+            Zapisz Dokument
+        </button>
+    </div>
+</div>

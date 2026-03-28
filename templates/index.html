@@ -1,76 +1,16 @@
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <title>Prosty WMS</title>
-</head>
-<body>
-    <div id="app">
-        <h1>Mój System Magazynowy</h1>
-        <div id="clerk-container"></div>
+{% extends "base.html" %}
+
+{% block content %}
+<main id="app-content" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        <div id="wms-form" style="display: none;">
-            <h3>Dodaj dokument</h3>
-            <select id="docType">
-                <option value="PZ">PZ (Przyjęcie Zewnętrzne)</option>
-                <option value="PW">PW (Przyjęcie Wewnętrzne)</option>
-                <option value="ZW">ZW (Zwrot Wewnętrzny)</option>
-                <option value="WZ">WZ (Wydanie Zewnętrzne)</option>
-                <option value="RW">RW (Rozchód Wewnętrzny)</option>
-            </select>
-            <input type="text" id="productId" placeholder="ID Produktu">
-            <input type="number" id="quantity" placeholder="Ilość">
-            <button onclick="sendDocument()">Zapisz Dokument</button>
+        {% include "components/form.html" %}
+
+        <div class="lg:col-span-2 space-y-8">
+            {% include "components/products.html" %}
+            {% include "components/documents.html" %}
         </div>
+
     </div>
-
-    <script 
-        async 
-        crossorigin="anonymous" 
-        data-clerk-publishable-key="pk_test_Y29uY2lzZS15ZXRpLTk0LmNsZXJrLmFjY291bnRzLmRldiQ" 
-        src="https://concise-yeti-94.clerk.accounts.dev/npm/@clerk/clerk-js@latest/dist/clerk.browser.js">
-    </script>
-
-    <script>
-        window.addEventListener('load', async function () {
-            try {
-                await Clerk.load();
-                
-                if (Clerk.user) {
-                    document.getElementById('clerk-container').innerHTML = '';
-                    Clerk.mountUserButton(document.getElementById('clerk-container'));
-                    document.getElementById('wms-form').style.display = 'block';
-                } else {
-                    Clerk.mountSignIn(document.getElementById('clerk-container'));
-                }
-            } catch (error) {
-                console.error("Błąd ładowania Clerka:", error);
-                alert("Nie udało się załadować panelu logowania.");
-            }
-        });
-
-        async function sendDocument() {
-            const docType = document.getElementById('docType').value;
-            const productId = document.getElementById('productId').value;
-            const quantity = document.getElementById('quantity').value;
-
-            const token = await Clerk.session.getToken();
-
-            const response = await fetch('/api/documents', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ type: docType, product_id: productId, quantity: quantity })
-            });
-
-            if (response.ok) {
-                alert("Dokument zapisany pomyślnie!");
-            } else {
-                alert("Błąd podczas zapisu dokumentu.");
-            }
-        }
-    </script>
-</body>
-</html>
+</main>
+{% endblock %}

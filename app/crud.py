@@ -38,3 +38,9 @@ def create_document(db: Session, doc_data: schemas.DocumentCreate):
     db.refresh(db_document)
     
     return db_document
+
+def get_products(db: Session):
+    return db.query(models.Product).order_by(models.Product.id).all()
+
+def get_documents(db: Session):
+    return db.query(models.Document).order_by(models.Document.created_at.desc()).all()
