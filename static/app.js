@@ -76,8 +76,7 @@ async function fetchDocuments() {
             const author = doc.created_by ? doc.created_by.substring(0, 12) + '...' : '-';
 
             const itemsHtml = doc.items.map(item => 
-                `<div class="text-sm">ID: ${item.product_id} <span class="${isIncome ? 'text-green-600' : 'text-red-600'} font-bold">(${isIncome ? '+' : '-'}${item.quantity} szt.)</span></div>`
-            ).join('');
+                `<div class="text-sm"><span class="text-gray-700 font-medium">${item.product.sku}</span> <span class="${isIncome ? 'text-green-600' : 'text-red-600'} font-bold">(${isIncome ? '+' : '-'}${item.quantity} szt.)</span></div>`).join('');
             
             const tr = document.createElement('tr');
             tr.innerHTML = `
@@ -149,13 +148,14 @@ function switchTab(tabName) {
 async function createProduct() {
     const sku = document.getElementById('newSku').value;
     const name = document.getElementById('newName').value;
+    const type = document.getElementById('newType').value;
 
     if(!sku || !name) return alert("Podaj SKU i nazwę!");
 
     const response = await fetch('/api/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sku, name, stock_quantity: 0 })
+        body: JSON.stringify({ sku: sku, name: name, type: type }) 
     });
 
     if(response.ok) {
@@ -163,6 +163,9 @@ async function createProduct() {
         document.getElementById('newSku').value = '';
         document.getElementById('newName').value = '';
         fetchProducts();
+    } else {
+        const errorData = await response.json();
+        alert(`Błąd: ${errorData.detail}`);
     }
 }
 
@@ -172,14 +175,23 @@ async function fetchProducts() {
         const products = await response.json();
         
         const tbody = document.getElementById('products-table-body');
-        if(tbody) tbody.innerHTML = products.map(p => `
-            <tr>
-                <td class="px-4 py-2">${p.id}</td>
-                <td class="px-4 py-2">${p.sku}</td>
-                <td class="px-4 py-2">${p.name}</td>
-                <td class="px-4 py-2 font-bold">${p.stock_quantity} szt.</td>
-            </tr>
-        `).join('');
+        if(tbody) {
+            tbody.innerHTML = products.map(p => {
+                const isComponent = p.type === 'POLPRODUKT';
+                const typeLabel = isComponent ? 'Półprodukt' : 'Produkt';
+                const typeBadge = `<span class="px-2 py-1 rounded text-xs font-bold ${isComponent ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'}">${typeLabel}</span>`;
+                
+                return `
+                <tr>
+                    <td class="px-4 py-2">${p.id}</td>
+                    <td class="px-4 py-2">${p.sku}</td>
+                    <td class="px-4 py-2">${p.name}</td>
+                    <td class="px-4 py-2">${typeBadge}</td>
+                    <td class="px-4 py-2 font-bold">${p.stock_quantity} szt.</td>
+                </tr>
+                `;
+            }).join('');
+        }
 
         const selects = ['productId', 'parentProductId', 'componentProductId'];
         selects.forEach(id => {
@@ -187,7 +199,7 @@ async function fetchProducts() {
             if(el) {
                 const current = el.value;
                 el.innerHTML = '<option value="">-- Wybierz produkt --</option>' + 
-                    products.map(p => `<option value="${p.id}">[${p.sku}] ${p.name}</option>`).join('');
+                    products.map(p => `<option value="${p.id}">[${p.sku}] ${p.name} (${p.type})</option>`).join('');
                 el.value = current;
             }
         });

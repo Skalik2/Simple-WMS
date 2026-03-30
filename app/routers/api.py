@@ -32,3 +32,10 @@ async def read_products(db: Session = Depends(get_db)):
 @router.get("/documents", response_model=List[schemas.DocumentResponse])
 async def read_documents(db: Session = Depends(get_db)):
     return crud.get_documents(db)
+
+@router.post("/products", response_model=schemas.ProductResponse)
+async def create_new_product(product: schemas.ProductCreate, db: Session = Depends(get_db)):
+    try:
+        return crud.create_product(db=db, product_data=product)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Błąd podczas dodawania produktu: {str(e)}")

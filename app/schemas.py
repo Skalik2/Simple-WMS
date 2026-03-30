@@ -1,7 +1,12 @@
 from pydantic import BaseModel
 from datetime import datetime
 from typing import List
-from .models import DocType
+from .models import DocType, ProductType
+
+class ProductCreate(BaseModel):
+    sku: str
+    name: str
+    type: ProductType
 
 class DocumentItemCreate(BaseModel):
     product_id: int
@@ -15,6 +20,7 @@ class ProductResponse(BaseModel):
     id: int
     sku: str | None = None
     name: str | None = None
+    type: ProductType 
     stock_quantity: int
 
     class Config:
@@ -23,6 +29,7 @@ class ProductResponse(BaseModel):
 class DocumentItemResponse(BaseModel):
     product_id: int
     quantity: int
+    product: ProductResponse
 
     class Config:
         from_attributes = True

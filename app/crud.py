@@ -45,3 +45,15 @@ def get_products(db: Session):
 
 def get_documents(db: Session):
     return db.query(models.Document).order_by(models.Document.created_at.desc()).all()
+
+def create_product(db: Session, product_data: schemas.ProductCreate):
+    db_product = models.Product(
+        sku=product_data.sku,
+        name=product_data.name,
+        type=product_data.type,
+        stock_quantity=0
+    )
+    db.add(db_product)
+    db.commit()
+    db.refresh(db_product)
+    return db_product

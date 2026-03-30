@@ -5,6 +5,10 @@ from sqlalchemy.orm import relationship
 
 from .database import Base
 
+class ProductType(str, enum.Enum):
+    PRODUKT = "PRODUKT"
+    POLPRODUKT = "POLPRODUKT"
+
 class DocType(str, enum.Enum):
     PZ = "PZ"
     PW = "PW"
@@ -18,6 +22,7 @@ class Product(Base):
     id = Column(Integer, primary_key=True, index=True)
     sku = Column(String, unique=True, index=True)
     name = Column(String)
+    type = Column(String, default=ProductType.PRODUKT.value)
     stock_quantity = Column(Integer, default=0)
 
 class Document(Base):
