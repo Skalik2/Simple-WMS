@@ -23,6 +23,7 @@ class Product(Base):
     sku = Column(String, unique=True, index=True)
     name = Column(String)
     type = Column(String, default=ProductType.PRODUKT.value)
+    unit = Column(String, default="szt.")
     stock_quantity = Column(Integer, default=0)
 
 class Document(Base):
@@ -46,3 +47,14 @@ class DocumentItem(Base):
     document = relationship("Document", back_populates="items")
     
     product = relationship("Product")
+
+class RecipeItem(Base):
+    __tablename__ = 'recipe_items'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    parent_product_id = Column(Integer, ForeignKey('products.id'))
+    component_product_id = Column(Integer, ForeignKey('products.id'))
+    quantity = Column(Integer)
+    
+    parent_product = relationship("Product", foreign_keys=[parent_product_id])
+    component_product = relationship("Product", foreign_keys=[component_product_id])

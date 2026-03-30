@@ -67,6 +67,7 @@ async function fetchDocuments() {
         const response = await fetch('/api/documents');
         const documents = await response.json();
         const tbody = document.getElementById('documents-table-body');
+        if (!tbody) return;
         tbody.innerHTML = '';
         
         documents.forEach(doc => {
@@ -133,35 +134,62 @@ async function sendDocument() {
 }
 
 
+function openProductModal() {
+    document.getElementById('product-modal').classList.remove('hidden');
+}
 
-function switchTab(tabName) {
-    document.getElementById('content-magazyn').classList.add('hidden');
-    document.getElementById('content-konfiguracja').classList.add('hidden');
+function closeProductModal() {
+    document.getElementById('product-modal').classList.add('hidden');
+}
+
+async function openRecipeModal(productId, productName) {
+    document.getElementById('parentProductId').value = productId;
+    document.getElementById('recipe-parent-name').innerText = productName;
     
-    document.getElementById('tab-magazyn').className = 'px-6 py-2 font-medium text-gray-500';
-    document.getElementById('tab-konfiguracja').className = 'px-6 py-2 font-medium text-gray-500';
+    currentRecipeItems = [];
+    renderRecipeItemsList();
 
-    document.getElementById('content-' + tabName).classList.remove('hidden');
-    document.getElementById('tab-' + tabName).className = 'px-6 py-2 font-medium border-b-2 border-blue-600 text-blue-600';
+    try {
+        const response = await fetch(`/api/products/${productId}/recipe`);
+        if (response.ok) {
+            const existingRecipe = await response.json();
+            currentRecipeItems = existingRecipe.map(item => ({
+                component_product_id: item.component_product_id,
+                quantity: item.quantity,
+                name: item.name
+            }));
+            renderRecipeItemsList();
+        }
+    } catch (error) {
+        console.error("Błąd podczas pobierania receptury:", error);
+    }
+    
+    document.getElementById('recipe-modal').classList.remove('hidden');
+}
+
+function closeRecipeModal() {
+    document.getElementById('recipe-modal').classList.add('hidden');
 }
 
 async function createProduct() {
     const sku = document.getElementById('newSku').value;
     const name = document.getElementById('newName').value;
     const type = document.getElementById('newType').value;
+    const unit = document.getElementById('newUnit').value;
 
     if(!sku || !name) return alert("Podaj SKU i nazwę!");
 
     const response = await fetch('/api/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sku: sku, name: name, type: type }) 
+        body: JSON.stringify({ sku: sku, name: name, type: type, unit: unit })
     });
 
     if(response.ok) {
         alert("Produkt dodany!");
         document.getElementById('newSku').value = '';
         document.getElementById('newName').value = '';
+        closeProductModal();
         fetchProducts();
     } else {
         const errorData = await response.json();
@@ -172,36 +200,154 @@ async function createProduct() {
 async function fetchProducts() {
     try {
         const response = await fetch('/api/products');
-        const products = await response.json();
+        allProducts = await response.json();
         
         const tbody = document.getElementById('products-table-body');
         if(tbody) {
-            tbody.innerHTML = products.map(p => {
+            tbody.innerHTML = allProducts.map(p => {
                 const isComponent = p.type === 'POLPRODUKT';
                 const typeLabel = isComponent ? 'Półprodukt' : 'Produkt';
                 const typeBadge = `<span class="px-2 py-1 rounded text-xs font-bold ${isComponent ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'}">${typeLabel}</span>`;
                 
+                const safeName = p.name.replace(/'/g, "\\'");
+
                 return `
-                <tr>
+                <tr class="hover:bg-gray-50 transition-colors">
                     <td class="px-4 py-2">${p.id}</td>
                     <td class="px-4 py-2">${p.sku}</td>
                     <td class="px-4 py-2">${p.name}</td>
                     <td class="px-4 py-2">${typeBadge}</td>
-                    <td class="px-4 py-2 font-bold">${p.stock_quantity} szt.</td>
+                    <td class="px-4 py-2 font-bold">${p.stock_quantity} ${p.unit}</td> <td class="px-4 py-2 text-center">
+                    <td class="px-4 py-2 text-center">
+                        <button onclick="openRecipeModal(${p.id}, '${safeName}')" class="text-gray-500 hover:text-indigo-600 text-lg transition-transform hover:scale-110" title="Zdefiniuj recepturę / powiąż z półproduktem">
+                            ⚙️
+                        </button>
+                    </td>
                 </tr>
                 `;
             }).join('');
         }
 
-        const selects = ['productId', 'parentProductId', 'componentProductId'];
-        selects.forEach(id => {
-            const el = document.getElementById(id);
-            if(el) {
-                const current = el.value;
-                el.innerHTML = '<option value="">-- Wybierz produkt --</option>' + 
-                    products.map(p => `<option value="${p.id}">[${p.sku}] ${p.name} (${p.type})</option>`).join('');
-                el.value = current;
-            }
-        });
+        const docProductSelect = document.getElementById('productId');
+        if(docProductSelect) {
+            docProductSelect.innerHTML = '<option value="">-- Wybierz produkt --</option>' + 
+                allProducts.map(p => `<option value="${p.id}">[${p.sku}] ${p.name}</option>`).join('');
+        }
+
+        const compSelect = document.getElementById('componentProductId');
+        if(compSelect) {
+            compSelect.innerHTML = '<option value="">-- Wybierz półprodukt --</option>' + 
+                allProducts
+                    .filter(p => p.type === 'POLPRODUKT')
+                    .map(p => `<option value="${p.id}">[${p.sku}] ${p.name}</option>`).join('');
+        }
     } catch (e) { console.error(e); }
+}
+
+let currentRecipeItems = [];
+
+async function openRecipeModal(productId, productName) {
+    document.getElementById('parentProductId').value = productId;
+    document.getElementById('recipe-parent-name').innerText = productName;
+    
+    currentRecipeItems = [];
+    renderRecipeItemsList();
+
+    try {
+        const response = await fetch(`/api/products/${productId}/recipe`);
+        if (response.ok) {
+            const existingRecipe = await response.json();
+            currentRecipeItems = existingRecipe.map(item => ({
+                component_product_id: item.component_product_id,
+                quantity: item.quantity,
+                name: item.name
+            }));
+            renderRecipeItemsList();
+        }
+    } catch (error) {
+        console.error("Błąd podczas pobierania receptury:", error);
+    }
+    
+    document.getElementById('recipe-modal').classList.remove('hidden');
+}
+
+function addRecipeItemToList() {
+    const compId = document.getElementById('componentProductId').value;
+    const quantity = document.getElementById('compQuantity').value;
+
+    if (!compId || !quantity || quantity <= 0) {
+        alert("Wybierz półprodukt i podaj poprawną ilość!");
+        return;
+    }
+
+    const selectEl = document.getElementById('componentProductId');
+    const compName = selectEl.options[selectEl.selectedIndex].text;
+
+    const parentId = document.getElementById('parentProductId').value;
+    if (compId === parentId) {
+        alert("Produkt nie może być swoim własnym półproduktem!");
+        return;
+    }
+
+    currentRecipeItems.push({
+        component_product_id: parseInt(compId),
+        quantity: parseInt(quantity),
+        name: compName
+    });
+
+    renderRecipeItemsList();
+    document.getElementById('compQuantity').value = '';
+}
+
+function removeRecipeItem(index) {
+    currentRecipeItems.splice(index, 1);
+    renderRecipeItemsList();
+}
+
+function renderRecipeItemsList() {
+    const listDiv = document.getElementById('recipe-items-list');
+    
+    if (currentRecipeItems.length === 0) {
+        listDiv.innerHTML = '<p class="text-gray-400 text-center italic">Brak przypisanych półproduktów</p>';
+        return;
+    }
+
+    listDiv.innerHTML = currentRecipeItems.map((item, index) => `
+        <div class="flex justify-between bg-gray-50 p-2 border rounded">
+            <span class="truncate pr-2">${item.name} | <b>${item.quantity} szt.</b></span>
+            <button type="button" onclick="removeRecipeItem(${index})" class="text-red-500 hover:text-red-700 font-bold px-2">X</button>
+        </div>
+    `).join('');
+}
+
+async function saveRecipe() {
+    const parentId = document.getElementById('parentProductId').value;
+
+    if (currentRecipeItems.length === 0) {
+        return alert("Dodaj co najmniej jeden półprodukt do listy!");
+    }
+
+    const payloadItems = currentRecipeItems.map(i => ({
+        component_product_id: i.component_product_id,
+        quantity: i.quantity
+    }));
+
+    const response = await fetch('/api/recipes', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+            parent_product_id: parseInt(parentId), 
+            items: payloadItems 
+        })
+    });
+
+    if (response.ok) {
+        alert("Receptura została poprawnie zapisana!");
+        closeRecipeModal();
+    } else {
+        const errorData = await response.json();
+        alert(`Błąd: ${errorData.detail || 'Podczas zapisu receptury.'}`);
+    }
 }

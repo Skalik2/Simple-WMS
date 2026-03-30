@@ -39,3 +39,22 @@ async def create_new_product(product: schemas.ProductCreate, db: Session = Depen
         return crud.create_product(db=db, product_data=product)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Błąd podczas dodawania produktu: {str(e)}")
+    
+@router.post("/recipes")
+async def create_recipe(recipe: schemas.RecipeCreate, db: Session = Depends(get_db)):
+    try:
+        crud.create_recipe(db=db, recipe_data=recipe)
+        return {"message": "Receptura zapisana pomyślnie"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Błąd podczas zapisu receptury: {str(e)}")
+    
+@router.get("/products/{product_id}/recipe")
+async def get_product_recipe(product_id: int, db: Session = Depends(get_db)):
+    recipe_items = crud.get_recipe(db, product_id)
+    return [
+        {
+            "component_product_id": item.component_product_id,
+            "quantity": item.quantity,
+            "name": item.component_product.name
+        } for item in recipe_items
+    ]

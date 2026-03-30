@@ -2,48 +2,10 @@
 
 {% block content %}
 <main id="app-content" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden">
-    <div class="flex border-b border-gray-200 mb-6">
-        <button onclick="switchTab('magazyn')" id="tab-magazyn" class="px-6 py-2 font-medium border-b-2 border-blue-600 text-blue-600">Magazyn</button>
-        <button onclick="switchTab('konfiguracja')" id="tab-konfiguracja" class="px-6 py-2 font-medium text-gray-500 hover:text-blue-600">Produkty i Receptury</button>
-    </div>
-
-    <div id="content-magazyn" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {% include "components/form.html" %}
         <div class="lg:col-span-2 space-y-8">
-            {% include "components/products.html" %}
             {% include "components/documents.html" %}
-        </div>
-    </div>
-
-    <div id="content-konfiguracja" class="hidden space-y-8">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <h3 class="text-lg font-semibold border-b pb-2 mb-4">Dodaj Nowy Produkt/Półprodukt</h3>
-                <div class="space-y-4">
-                    <input type="text" id="newSku" placeholder="SKU (np. KAB-001)" class="w-full border p-2 rounded">
-                    <input type="text" id="newName" placeholder="Nazwa produktu" class="w-full border p-2 rounded">
-                    
-                    <select id="newType" class="w-full border p-2 rounded">
-                        <option value="PRODUKT">Produkt</option>
-                        <option value="POLPRODUKT">Półprodukt</option>
-                    </select>
-                    
-                    <button onclick="createProduct()" class="w-full bg-green-600 text-white font-bold py-2 rounded hover:bg-green-700">Dodaj do Bazy</button>
-                </div>
-            </div>
-
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <h3 class="text-lg font-semibold border-b pb-2 mb-4">Zdefiniuj Skład (Recepturę)</h3>
-                <p class="text-xs text-gray-500 mb-4">Wybierz produkt główny i przypisz mu półprodukt.</p>
-                <div class="space-y-4">
-                    <select id="parentProductId" class="w-full border p-2 rounded"></select>
-                    <div class="flex gap-2">
-                        <select id="componentProductId" class="w-full border p-2 rounded"></select>
-                        <input type="number" id="compQuantity" placeholder="Ilość" class="w-24 border p-2 rounded">
-                    </div>
-                    <button onclick="addComposition()" class="w-full bg-indigo-600 text-white font-bold py-2 rounded hover:bg-indigo-700">Powiąż Produkty</button>
-                </div>
-            </div>
         </div>
     </div>
 </main>

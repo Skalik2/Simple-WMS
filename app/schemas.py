@@ -7,6 +7,7 @@ class ProductCreate(BaseModel):
     sku: str
     name: str
     type: ProductType
+    unit: str
 
 class DocumentItemCreate(BaseModel):
     product_id: int
@@ -20,7 +21,8 @@ class ProductResponse(BaseModel):
     id: int
     sku: str | None = None
     name: str | None = None
-    type: ProductType 
+    type: ProductType
+    unit: str
     stock_quantity: int
 
     class Config:
@@ -43,3 +45,11 @@ class DocumentResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class RecipeItemCreate(BaseModel):
+    component_product_id: int
+    quantity: int
+
+class RecipeCreate(BaseModel):
+    parent_product_id: int
+    items: List[RecipeItemCreate]

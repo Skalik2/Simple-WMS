@@ -9,3 +9,7 @@ templates = Jinja2Templates(directory="templates")
 @router.get("/", response_class=HTMLResponse)
 async def read_gui(request: Request):
     return templates.TemplateResponse(request=request, name="index.html")
+
+@router.get("/magazyn", response_class=HTMLResponse)
+async def read_magazyn(request: Request):
+    return templates.TemplateResponse(request=request, name="magazyn.html")
