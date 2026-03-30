@@ -3,10 +3,13 @@ from datetime import datetime
 from typing import List
 from .models import DocType
 
-class DocumentCreate(BaseModel):
-    type: DocType
+class DocumentItemCreate(BaseModel):
     product_id: int
     quantity: int
+
+class DocumentCreate(BaseModel):
+    type: DocType
+    items: List[DocumentItemCreate]
 
 class ProductResponse(BaseModel):
     id: int

@@ -22,6 +22,46 @@ window.addEventListener('load', async function () {
     }
 });
 
+let currentDocumentItems = [];
+
+function addDocumentItem() {
+    const productId = document.getElementById('productId').value;
+    const quantity = document.getElementById('quantity').value;
+
+    if (!productId || !quantity || quantity <= 0) {
+        alert("Wybierz produkt i wpisz poprawną ilość!");
+        return;
+    }
+
+    const selectEl = document.getElementById('productId');
+    const productName = selectEl.options[selectEl.selectedIndex].text;
+
+    currentDocumentItems.push({
+        product_id: parseInt(productId),
+        quantity: parseInt(quantity),
+        name: productName
+    });
+
+    renderDocumentItemsList();
+    document.getElementById('quantity').value = '';
+}
+
+function removeDocumentItem(index) {
+    currentDocumentItems.splice(index, 1);
+    renderDocumentItemsList();
+}
+
+function renderDocumentItemsList() {
+    const listDiv = document.getElementById('document-items-list');
+    listDiv.innerHTML = currentDocumentItems.map((item, index) => `
+        <div class="flex justify-between bg-gray-50 p-2 border rounded">
+            <span>${item.name} | <b>${item.quantity} szt.</b></span>
+            <button type="button" onclick="removeDocumentItem(${index})" class="text-red-500 font-bold px-2">X</button>
+        </div>
+    `).join('');
+}
+
+
 async function fetchDocuments() {
     try {
         const response = await fetch('/api/documents');
@@ -30,22 +70,22 @@ async function fetchDocuments() {
         tbody.innerHTML = '';
         
         documents.forEach(doc => {
-            const item = doc.items.length > 0 ? doc.items[0] : {product_id: '-', quantity: '-'};
             const isIncome = ['PZ', 'PW', 'ZW'].includes(doc.type);
             const typeBadge = `<span class="px-2 py-1 rounded text-xs font-bold ${isIncome ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${doc.type}</span>`;
             const dateObj = new Date(doc.created_at);
-            
-            const tr = document.createElement('tr');
             const author = doc.created_by ? doc.created_by.substring(0, 12) + '...' : '-';
 
+            const itemsHtml = doc.items.map(item => 
+                `<div class="text-sm">ID: ${item.product_id} <span class="${isIncome ? 'text-green-600' : 'text-red-600'} font-bold">(${isIncome ? '+' : '-'}${item.quantity} szt.)</span></div>`
+            ).join('');
+            
+            const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td class="px-4 py-2 text-gray-500">#${doc.id}</td>
                 <td class="px-4 py-2">${typeBadge}</td>
                 <td class="px-4 py-2 text-gray-500">${dateObj.toLocaleString('pl-PL')}</td>
-                <td class="px-4 py-2 text-xs text-gray-400" title="${doc.created_by || ''}">${author}</td> <td class="px-4 py-2 font-medium">${item.product_id}</td>
-                <td class="px-4 py-2 font-medium ${isIncome ? 'text-green-600' : 'text-red-600'}">
-                    ${isIncome ? '+' : '-'}${item.quantity}
-                </td>
+                <td class="px-4 py-2 text-xs text-gray-400" title="${doc.created_by || ''}">${author}</td>
+                <td class="px-4 py-2">${itemsHtml || '-'}</td>
             `;
             tbody.appendChild(tr);
         });
@@ -56,15 +96,18 @@ async function fetchDocuments() {
 
 async function sendDocument() {
     const docType = document.getElementById('docType').value;
-    const productId = document.getElementById('productId').value;
-    const quantity = document.getElementById('quantity').value;
 
-    if(!productId || !quantity) {
-        alert("Wypełnij wszystkie pola!");
+    if (currentDocumentItems.length === 0) {
+        alert("Dodaj co najmniej jedną pozycję do dokumentu!");
         return;
     }
 
     const token = await Clerk.session.getToken();
+
+    const payloadItems = currentDocumentItems.map(i => ({
+        product_id: i.product_id,
+        quantity: i.quantity
+    }));
 
     const response = await fetch('/api/documents', {
         method: 'POST',
@@ -74,14 +117,14 @@ async function sendDocument() {
         },
         body: JSON.stringify({ 
             type: docType, 
-            product_id: parseInt(productId), 
-            quantity: parseInt(quantity) 
+            items: payloadItems 
         })
     });
 
     if (response.ok) {
+        currentDocumentItems = [];
+        renderDocumentItemsList();
         document.getElementById('productId').value = '';
-        document.getElementById('quantity').value = '';
         fetchProducts();
         fetchDocuments();
     } else {
