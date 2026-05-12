@@ -1,83 +1,120 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { FileText, Plus, ArrowUpRight, ArrowDownLeft, Calendar, User } from 'lucide-react';
 import { motion } from 'motion/react';
-import { RECENT_DOCUMENTS } from '../constants';
-import { Filter, Download, Plus } from 'lucide-react';
+import { NewDocumentModal } from './NewDocumentModal';
 
-export const Documents = ({ onNewClick }: { onNewClick: () => void }) => {
+interface DocumentItem {
+  id: number;
+  product_name: string;
+  quantity: number;
+}
+
+interface Document {
+  id: number;
+  document_number: string;
+  type: 'PZ' | 'WZ';
+  contractor_name: string;
+  created_at: string;
+  items: DocumentItem[];
+}
+
+export const Documents = () => {
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const fetchDocuments = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/documents');
+      if (res.ok) {
+        const data = await res.json();
+        setDocuments(data);
+      }
+    } catch (err) {
+      console.error('Błąd pobierania dokumentów:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDocuments();
+  }, []);
+
   return (
-    <div id="documents-content" className="p-6 lg:p-8 max-w-7xl mx-auto w-full">
+    <div className="p-6 lg:p-8 max-w-7xl mx-auto w-full">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h2 className="text-3xl font-bold text-on-surface tracking-tight">Dokumenty</h2>
-          <p className="text-on-surface-variant">Przeglądaj i filtruj wszystkie dokumenty magazynowe.</p>
+          <p className="text-on-surface-variant">Zarządzaj przyjęciami (PZ) i wydaniami (WZ) towaru.</p>
         </div>
         <button 
-          onClick={onNewClick}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl shadow-lg hover:shadow-primary/20 hover:scale-105 transition-all"
+          onClick={() => setIsModalOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl shadow-lg hover:shadow-primary/20 transition-all"
         >
           <Plus size={20} />
           <span className="font-bold text-sm">Nowy dokument</span>
         </button>
       </div>
 
-      <div className="flex items-center gap-2 mb-6">
-        <div className="flex-1 relative">
-          <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" size={16} />
-          <input 
-            type="text" 
-            placeholder="Filtruj po ID, typie lub statusie..."
-            className="w-full pl-10 pr-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-          />
-        </div>
-        <button className="p-2 bg-surface-container-lowest border border-outline-variant rounded-xl text-on-surface-variant hover:bg-surface-container-low transition-all">
-          <Download size={20} />
-        </button>
+      <div className="grid gap-4">
+        {loading ? (
+          <div className="text-center py-10 text-on-surface-variant text-sm font-medium">Ładowanie dokumentów...</div>
+        ) : documents.length === 0 ? (
+          <div className="text-center py-10 bg-surface-container-lowest border border-dashed border-outline rounded-2xl">
+            <p className="text-on-surface-variant">Brak dokumentów w bazie.</p>
+          </div>
+        ) : (
+          documents.map((doc, idx) => (
+            <motion.div
+              key={doc.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.05 }}
+              className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 hover:border-primary/50 transition-colors cursor-pointer group"
+            >
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className={`p-3 rounded-xl ${
+                    doc.type === 'PZ' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                  }`}>
+                    {doc.type === 'PZ' ? <ArrowDownLeft size={24} /> : <ArrowUpRight size={24} />}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs font-bold text-primary">{doc.document_number}</span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
+                        doc.type === 'PZ' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                      }`}>
+                        {doc.type === 'PZ' ? 'Przyjęcie' : 'Wydanie'}
+                      </span>
+                    </div>
+                    <h3 className="font-bold text-on-surface">{doc.contractor_name || 'Brak kontrahenta'}</h3>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-6 text-sm text-on-surface-variant">
+                  <div className="flex items-center gap-2">
+                    <Calendar size={16} />
+                    {new Date(doc.created_at).toLocaleDateString('pl-PL')}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <FileText size={16} />
+                    {doc.items?.length || 0} pozycji
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ))
+        )}
       </div>
 
-      <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-surface-container-low/50 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest border-b border-outline-variant/60">
-              <tr>
-                <th className="px-6 py-4">ID Dokumentu</th>
-                <th className="px-6 py-4">Typ</th>
-                <th className="px-6 py-4">Data Wystawienia</th>
-                <th className="px-6 py-4">Odpowiedzialny</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-surface-container-high transition-all">
-              {RECENT_DOCUMENTS.map((doc, idx) => (
-                <motion.tr 
-                  key={doc.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: idx * 0.05 }}
-                  className="hover:bg-surface-bright transition-colors cursor-pointer group"
-                >
-                  <td className="px-6 py-4 font-mono text-xs font-medium text-on-surface-variant group-hover:text-primary transition-colors">
-                    {doc.id}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                      doc.type === 'PZ' || doc.type === 'WZ' 
-                        ? 'bg-primary-fixed text-on-primary-fixed-variant' 
-                        : 'bg-surface-container-high text-on-surface'
-                    }`}>
-                      {doc.type}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-on-surface-variant">
-                    {doc.date}
-                  </td>
-                  <td className="px-6 py-4 text-sm font-medium text-on-surface">
-                    {doc.responsible.name}
-                  </td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <NewDocumentModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSuccess={fetchDocuments}
+      />
     </div>
   );
 };

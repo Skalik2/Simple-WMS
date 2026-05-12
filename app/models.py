@@ -1,5 +1,5 @@
 import enum
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, Integer, String, Enum as SQLEnum, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 
@@ -16,6 +16,13 @@ class DocType(str, enum.Enum):
     WZ = "WZ"
     RW = "RW"
 
+class Contractor(Base):
+    __tablename__ = 'contractors'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, index=True)
+    nip = Column(String, nullable=True)
+
 class Product(Base):
     __tablename__ = 'products'
     
@@ -31,10 +38,17 @@ class Document(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     type = Column(SQLEnum(DocType))
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     created_by = Column(String, index=True, nullable=True)
     
+    contractor_id = Column(Integer, ForeignKey('contractors.id'), nullable=True)
+    contractor = relationship("Contractor")
     items = relationship("DocumentItem", back_populates="document")
+
+    @property
+    def contractor_name(self):
+        return self.contractor.name if self.contractor else None
+    
 
 class DocumentItem(Base):
     __tablename__ = 'document_items'

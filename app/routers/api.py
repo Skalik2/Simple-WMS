@@ -58,3 +58,11 @@ async def get_product_recipe(product_id: int, db: Session = Depends(get_db)):
             "name": item.component_product.name
         } for item in recipe_items
     ]
+
+@router.get("/contractors", response_model=List[schemas.ContractorResponse])
+async def read_contractors(db: Session = Depends(get_db)):
+    return crud.get_contractors(db)
+
+@router.post("/contractors", response_model=schemas.ContractorResponse)
+async def create_new_contractor(contractor: schemas.ContractorCreate, db: Session = Depends(get_db)):
+    return crud.create_contractor(db=db, contractor_data=contractor)

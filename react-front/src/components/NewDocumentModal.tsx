@@ -1,170 +1,157 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { X, Plus, Trash2, Check } from 'lucide-react';
 import { Modal } from './ui/Modal';
-import { Plus, Trash2, Check } from 'lucide-react';
-import { INVENTORY_ITEMS, CONTRACTORS } from '../constants';
-
-interface ProductItem {
-  id: string;
-  name: string;
-  quantity: number;
-}
 
 interface NewDocumentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  initialType?: string;
+  onSuccess: () => void;
 }
 
-export const NewDocumentModal: React.FC<NewDocumentModalProps> = ({ isOpen, onClose, initialType = 'PZ' }) => {
-  const [docType, setDocType] = React.useState(initialType);
-  const [products, setProducts] = React.useState<ProductItem[]>([
-    { id: Math.random().toString(), name: '', quantity: 1 }
-  ]);
+export const NewDocumentModal = ({ isOpen, onClose, onSuccess }: NewDocumentModalProps) => {
+  const [type, setType] = useState<'PZ' | 'WZ'>('PZ');
+  const [contractorId, setContractorId] = useState('');
+  const [items, setItems] = useState([{ product_id: '', quantity: 1 }]);
+  
+  // Dane z API
+  const [availableProducts, setAvailableProducts] = useState<any[]>([]);
+  const [availableContractors, setAvailableContractors] = useState<any[]>([]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen) {
-      setDocType(initialType);
-      setProducts([{ id: Math.random().toString(), name: '', quantity: 1 }]);
+      // Pobierz dane potrzebne do formularza
+      fetch('/api/products').then(res => res.json()).then(setAvailableProducts);
+      fetch('/api/contractors').then(res => res.json()).then(setAvailableContractors);
     }
-  }, [isOpen, initialType]);
+  }, [isOpen]);
 
-  const addProduct = () => {
-    setProducts([...products, { id: Math.random().toString(), name: '', quantity: 1 }]);
-  };
+  const addItem = () => setItems([...items, { product_id: '', quantity: 1 }]);
+  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
 
-  const removeProduct = (id: string) => {
-    if (products.length > 1) {
-      setProducts(products.filter(p => p.id !== id));
-    }
-  };
-
-  const updateProduct = (id: string, field: keyof ProductItem, value: string | number) => {
-    setProducts(products.map(p => p.id === id ? { ...p, [field]: value } : p));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert(`Dokument ${docType} z ${products.length} produktami został utworzony`);
-    onClose();
+    
+    const payload = {
+      type,
+      contractor_id: parseInt(contractorId),
+      items: items.map(item => ({
+        product_id: parseInt(item.product_id),
+        quantity: parseFloat(item.quantity.toString())
+      }))
+    };
+
+    try {
+      const res = await fetch('/api/documents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        onSuccess();
+        onClose();
+        // Reset formularza
+        setContractorId('');
+        setItems([{ product_id: '', quantity: 1 }]);
+      } else {
+        const errorData = await res.json();
+        alert(`Błąd: ${JSON.stringify(errorData.detail)}`);
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
-    <Modal 
-      isOpen={isOpen} 
-      onClose={onClose} 
-      title={`Nowy dokument: ${docType}`}
-    >
-      <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 scrollbar-hide">
+    <Modal isOpen={isOpen} onClose={onClose} title="Nowy dokument magazynowy">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Wybór typu i kontrahenta */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Typ dokumentu</label>
+            <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Typ</label>
             <select 
-              value={docType}
-              onChange={(e) => setDocType(e.target.value)}
-              className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-sm focus:ring-2 focus:ring-primary/20 appearance-none"
+              value={type} 
+              onChange={(e) => setType(e.target.value as 'PZ' | 'WZ')}
+              className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-sm"
             >
               <option value="PZ">PZ - Przyjęcie</option>
               <option value="WZ">WZ - Wydanie</option>
-              <option value="ZW">ZW - Zwrot</option>
-              <option value="RW">RW - Rozchód</option>
             </select>
           </div>
           <div className="space-y-1">
-            <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Data</label>
-            <input 
-              type="date" 
-              defaultValue={new Date().toISOString().split('T')[0]}
-              className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-sm focus:ring-2 focus:ring-primary/20"
-            />
-          </div>
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Kontrahent / Cel</label>
-          <select 
-            className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-sm focus:ring-2 focus:ring-primary/20 appearance-none"
-            defaultValue=""
-            required
-          >
-            <option value="" disabled>Wybierz kontrahenta...</option>
-            {CONTRACTORS.map(k => (
-              <option key={k.id} value={k.id}>{k.name}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="space-y-3">
-          <div className="flex items-center justify-between px-1">
-            <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Produkty</label>
-            <button 
-              type="button" 
-              onClick={addProduct}
-              className="p-1 text-primary hover:bg-primary/10 rounded-md transition-colors"
+            <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Kontrahent</label>
+            <select 
+              required
+              value={contractorId}
+              onChange={(e) => setContractorId(e.target.value)}
+              className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-sm"
             >
-              <Plus size={16} />
-            </button>
-          </div>
-          
-          <div className="space-y-3">
-            {products.map((product, idx) => (
-              <div key={product.id} className="flex gap-2 items-end group">
-                <div className="flex-[3] space-y-1">
-                  <select 
-                    value={product.name}
-                    onChange={(e) => updateProduct(product.id, 'name', e.target.value)}
-                    className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-sm focus:ring-2 focus:ring-primary/20 appearance-none"
-                    required
-                  >
-                    <option value="" disabled>Wybierz produkt...</option>
-                    {INVENTORY_ITEMS.map(item => (
-                      <option key={item.id} value={item.name}>
-                        {item.name} ({item.id})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex-1 space-y-1">
-                  <input 
-                    type="number" 
-                    min="1"
-                    value={product.quantity}
-                    onChange={(e) => updateProduct(product.id, 'quantity', parseInt(e.target.value) || 1)}
-                    className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-sm focus:ring-2 focus:ring-primary/20"
-                    required
-                  />
-                </div>
-                {products.length > 1 && (
-                  <button 
-                    type="button"
-                    onClick={() => removeProduct(product.id)}
-                    className="p-2 text-on-surface-variant hover:text-error hover:bg-error/10 rounded-xl transition-all mb-[1px]"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                )}
-              </div>
-            ))}
+              <option value="">Wybierz...</option>
+              {availableContractors.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
           </div>
         </div>
 
-        <div className="pt-4 flex gap-3 sticky bottom-0 bg-surface-container-lowest">
+        {/* Pozycje dokumentu */}
+        <div className="space-y-3">
+          <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Pozycje</label>
+          {items.map((item, index) => (
+            <div key={index} className="flex gap-2 items-end">
+              <div className="flex-1">
+                <select 
+                  required
+                  value={item.product_id}
+                  onChange={(e) => {
+                    const newItems = [...items];
+                    newItems[index].product_id = e.target.value;
+                    setItems(newItems);
+                  }}
+                  className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-sm"
+                >
+                  <option value="">Produkt...</option>
+                  {availableProducts.map(p => (
+                    <option key={p.id} value={p.id}>{p.name} (Stan: {p.stock_quantity})</option>
+                  ))}
+                </select>
+              </div>
+              <div className="w-24">
+                <input 
+                  type="number" 
+                  min="1"
+                  value={item.quantity}
+                  onChange={(e) => {
+                    const newItems = [...items];
+                    newItems[index].quantity = parseInt(e.target.value);
+                    setItems(newItems);
+                  }}
+                  className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-sm"
+                />
+              </div>
+              {items.length > 1 && (
+                <button type="button" onClick={() => removeItem(index)} className="p-2 text-error hover:bg-error/10 rounded-lg">
+                  <Trash2 size={18} />
+                </button>
+              )}
+            </div>
+          ))}
           <button 
             type="button" 
-            onClick={onClose}
-            className="flex-1 px-4 py-2 bg-surface-container-high text-on-surface font-bold rounded-xl text-sm hover:bg-surface-variant transition-colors"
+            onClick={addItem}
+            className="text-xs font-bold text-primary flex items-center gap-1 hover:underline"
           >
-            Anuluj
+            <Plus size={14} /> Dodaj kolejną pozycję
           </button>
-          <button 
-            type="submit"
-            className="flex-1 px-4 py-2 bg-primary text-white font-bold rounded-xl text-sm shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-          >
-            <Check size={16} strokeWidth={3} />
-            Utwórz
+        </div>
+
+        <div className="pt-4 flex gap-3">
+          <button type="button" onClick={onClose} className="flex-1 px-4 py-2 bg-surface-container-high text-on-surface font-bold rounded-xl text-sm">Anuluj</button>
+          <button type="submit" className="flex-1 px-4 py-2 bg-primary text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2">
+            <Check size={16} /> Wystaw dokument
           </button>
         </div>
       </form>
     </Modal>
   );
 };
-

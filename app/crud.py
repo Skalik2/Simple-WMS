@@ -2,10 +2,24 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from . import models, schemas
 
+def get_contractors(db: Session):
+    return db.query(models.Contractor).order_by(models.Contractor.name).all()
+
+def create_contractor(db: Session, contractor_data: schemas.ContractorCreate):
+    db_contractor = models.Contractor(
+        name=contractor_data.name,
+        nip=contractor_data.nip
+    )
+    db.add(db_contractor)
+    db.commit()
+    db.refresh(db_contractor)
+    return db_contractor
+
 def create_document(db: Session, doc_data: schemas.DocumentCreate, user_id: str):
     db_document = models.Document(
         type=doc_data.type,
-        created_by=user_id
+        created_by=user_id,
+        contractor_id=doc_data.contractor_id
     )
     db.add(db_document)
     db.flush()

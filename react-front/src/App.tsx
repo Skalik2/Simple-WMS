@@ -6,6 +6,8 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Warehouse, Menu, X } from 'lucide-react';
+import { SignedIn, SignedOut, SignIn, UserButton, useUser } from '@clerk/clerk-react';
+
 import { NAV_ITEMS } from './constants';
 import { Dashboard } from './components/Dashboard';
 import { Inventory } from './components/Inventory';
@@ -19,6 +21,9 @@ export default function App() {
   const [activeTab, setActiveTab] = React.useState('dashboard');
   const [isModalOpen, setModalOpen] = React.useState(false);
   const [selectedDocType, setSelectedDocType] = React.useState('PZ');
+
+  // Pobranie informacji o zalogowanym użytkowniku (dla Sidebara/Topbara)
+  const { user } = useUser();
 
   const openModal = (type: string = 'PZ') => {
     setSelectedDocType(type);
@@ -36,7 +41,8 @@ export default function App() {
     }
   };
 
-  return (
+  // Główny widok WMS widoczny tylko dla zalogowanych
+  const mainLayout = (
     <div className="flex min-h-screen bg-background text-on-background">
       {/* Mobile Backdrop */}
       <AnimatePresence>
@@ -122,14 +128,11 @@ export default function App() {
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-3">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-bold text-on-surface">Kamin Nowak</p>
+                <p className="text-sm font-bold text-on-surface">{user?.fullName || 'Użytkownik'}</p>
                 <p className="text-xs text-on-surface-variant">Administrator</p>
               </div>
-              <img 
-                src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop&q=80" 
-                alt="Profile" 
-                className="w-9 h-9 rounded-full object-cover border border-outline-variant shadow-sm"
-              />
+              {/* Dynamiczny avatar użytkownika Clerka z możliwością wylogowania */}
+              <UserButton afterSignOutUrl="/"/>
             </div>
           </div>
         </header>
@@ -154,5 +157,21 @@ export default function App() {
         initialType={selectedDocType} 
       />
     </div>
+  );
+
+  return (
+    <>
+      {/* Pokazuje formularz logowania jeśli NIE ZALOGOWANY */}
+      <SignedOut>
+        <div className="min-h-screen flex items-center justify-center bg-surface-container-low">
+          <SignIn />
+        </div>
+      </SignedOut>
+
+      {/* Pokazuje strukturę aplikacji jeśli ZALOGOWANY */}
+      <SignedIn>
+        {mainLayout}
+      </SignedIn>
+    </>
   );
 }

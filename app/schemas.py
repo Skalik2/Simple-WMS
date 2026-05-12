@@ -3,6 +3,14 @@ from datetime import datetime
 from typing import List
 from .models import DocType, ProductType
 
+class ContractorResponse(BaseModel):
+    id: int
+    name: str
+    nip: str | None = None
+
+    class Config:
+        from_attributes = True
+
 class ProductCreate(BaseModel):
     sku: str
     name: str
@@ -15,6 +23,7 @@ class DocumentItemCreate(BaseModel):
 
 class DocumentCreate(BaseModel):
     type: DocType
+    contractor_id: int
     items: List[DocumentItemCreate]
 
 class ProductResponse(BaseModel):
@@ -41,10 +50,15 @@ class DocumentResponse(BaseModel):
     type: DocType
     created_at: datetime
     created_by: str | None = None
+    contractor_name: str | None = None
     items: List[DocumentItemResponse] = []
 
     class Config:
         from_attributes = True
+
+class ContractorCreate(BaseModel):
+    name: str
+    nip: str | None = None
 
 class RecipeItemCreate(BaseModel):
     component_product_id: int

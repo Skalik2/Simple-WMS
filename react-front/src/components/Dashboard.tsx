@@ -1,101 +1,76 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { Package, Users, FileText, TrendingUp, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import { motion } from 'motion/react';
-import { ACTION_CARDS, RECENT_DOCUMENTS } from '../constants';
 
-export const Dashboard = ({ onActionClick }: { onActionClick: (type: string) => void }) => {
+interface RecentDocument {
+  id: number;
+  document_number?: string; // Jeśli masz logikę numeracji, lub użyj ID
+  type: string;
+  contractor_name: string;
+  created_at: string;
+}
+
+export const Dashboard = () => {
+  const [recentDocs, setRecentDocs] = useState<RecentDocument[]>([]);
+  const [stats, setStats] = useState({ products: 0, contractors: 0, documents: 0 });
+
+  useEffect(() => {
+    // Pobieranie dokumentów do tabeli
+    fetch('/api/documents')
+      .then(res => res.json())
+      .then(data => setRecentDocs(data.slice(0, 5))); // Tylko 5 ostatnich
+
+    // Pobieranie statystyk (uproszczone pobranie długości list)
+    Promise.all([
+      fetch('/api/products').then(res => res.json()),
+      fetch('/api/contractors').then(res => res.json()),
+      fetch('/api/documents').then(res => res.json())
+    ]).then(([p, c, d]) => {
+      setStats({ products: p.length, contractors: c.length, documents: d.length });
+    });
+  }, []);
+
   return (
-    <div id="dashboard-content" className="p-6 lg:p-8 max-w-7xl mx-auto w-full">
-      <header className="mb-8">
-        <h2 className="text-3xl font-bold text-on-surface tracking-tight">Przegląd panelu</h2>
-      </header>
-
-      {/* Action Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-        {ACTION_CARDS.map((card, idx) => (
-          <motion.button
-            key={card.id}
-            id={`card-${card.id}`}
-            whileHover={{ y: -4 }}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.1 }}
-            onClick={() => onActionClick(card.code)}
-            className="group flex flex-col items-start p-6 bg-surface-container-lowest border border-outline-variant rounded-2xl hover:shadow-xl hover:border-primary-fixed-dim transition-all text-left w-full"
-          >
-            <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-colors ${
-              card.variant === 'primary' 
-                ? 'bg-primary-fixed/30 text-primary group-hover:bg-primary-fixed' 
-                : 'bg-surface-container-high text-secondary group-hover:bg-surface-variant'
-            }`}>
-              <card.icon size={24} strokeWidth={2.5} />
-            </div>
-            <span className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${
-              card.variant === 'primary' ? 'text-primary' : 'text-secondary'
-            }`}>{card.code}</span>
-            <span className="font-bold text-on-surface leading-tight">{card.title}</span>
-          </motion.button>
-        ))}
+    <div className="p-6 lg:p-8 max-w-7xl mx-auto w-full">
+      <h2 className="text-3xl font-bold text-on-surface mb-8 tracking-tight">Dashboard</h2>
+      
+      {/* Statystyki */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <StatCard title="Produkty" value={stats.products} icon={<Package />} color="bg-primary" />
+        <StatCard title="Kontrahenci" value={stats.contractors} icon={<Users />} color="bg-secondary" />
+        <StatCard title="Dokumenty" value={stats.documents} icon={<FileText />} color="bg-tertiary" />
       </div>
 
-      {/* Recent Documents Table */}
+      {/* Tabela ostatnich dokumentów */}
       <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden shadow-sm">
-        <div className="px-6 py-4 border-b border-outline-variant flex justify-between items-center bg-surface-bright/50">
+        <div className="px-6 py-4 border-b border-outline-variant">
           <h3 className="font-bold text-on-surface">Ostatnie dokumenty</h3>
-          <button className="text-xs font-bold text-primary hover:underline uppercase tracking-tighter">
-            Zobacz wszystkie
-          </button>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
-            <thead className="bg-surface-container-low/50 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest border-b border-outline-variant/60">
+            <thead className="bg-surface-container-low/50 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest border-b border-outline-variant">
               <tr>
-                <th className="px-6 py-4">ID Dokumentu</th>
                 <th className="px-6 py-4">Typ</th>
+                <th className="px-6 py-4">Numer/ID</th>
+                <th className="px-6 py-4">Kontrahent</th>
                 <th className="px-6 py-4">Data</th>
-                <th className="px-6 py-4">Odpowiedzialny</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-surface-container-high transition-all">
-              {RECENT_DOCUMENTS.map((doc, idx) => (
-                <motion.tr 
-                  key={doc.id}
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  transition={{ delay: idx * 0.05 }}
-                  className="hover:bg-surface-bright transition-colors cursor-pointer group"
-                >
-                  <td className="px-6 py-4 font-mono text-xs font-medium text-on-surface-variant group-hover:text-primary transition-colors">
-                    {doc.id}
-                  </td>
+            <tbody className="divide-y divide-surface-container-high">
+              {recentDocs.map((doc, idx) => (
+                <tr key={doc.id} className="hover:bg-surface-bright transition-colors">
                   <td className="px-6 py-4">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                      doc.type === 'PZ' || doc.type === 'WZ' 
-                        ? 'bg-primary-fixed text-on-primary-fixed-variant' 
-                        : 'bg-surface-container-high text-on-surface'
-                    }`}>
+                    <span className={`flex items-center gap-2 text-xs font-bold ${doc.type === 'PZ' ? 'text-green-600' : 'text-blue-600'}`}>
+                      {doc.type === 'PZ' ? <ArrowDownLeft size={14}/> : <ArrowUpRight size={14}/>}
                       {doc.type}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-on-surface-variant">
-                    {doc.date}
+                  <td className="px-6 py-4 font-mono text-xs">#{doc.id}</td>
+                  <td className="px-6 py-4 text-sm font-medium">{doc.contractor_name || 'Brak'}</td>
+                  <td className="px-6 py-4 text-xs text-on-surface-variant">
+                    {new Date(doc.created_at).toLocaleString('pl-PL')}
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      {doc.responsible.avatar ? (
-                        <img 
-                          src={doc.responsible.avatar} 
-                          alt={doc.responsible.name} 
-                          className="w-6 h-6 rounded-full border border-outline-variant"
-                        />
-                      ) : (
-                        <div className="w-6 h-6 rounded-full bg-primary-container text-[10px] font-bold text-white flex items-center justify-center">
-                          {doc.responsible.initials}
-                        </div>
-                      )}
-                      <span className="text-sm font-medium text-on-surface">{doc.responsible.name}</span>
-                    </div>
-                  </td>
-                </motion.tr>
+                </tr>
               ))}
             </tbody>
           </table>
@@ -104,3 +79,13 @@ export const Dashboard = ({ onActionClick }: { onActionClick: (type: string) => 
     </div>
   );
 };
+
+const StatCard = ({ title, value, icon, color }: any) => (
+  <div className="bg-surface-container-lowest border border-outline-variant p-6 rounded-2xl flex items-center gap-5">
+    <div className={`p-4 rounded-xl text-white ${color}`}>{icon}</div>
+    <div>
+      <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">{title}</p>
+      <p className="text-2xl font-black text-on-surface">{value}</p>
+    </div>
+  </div>
+);
