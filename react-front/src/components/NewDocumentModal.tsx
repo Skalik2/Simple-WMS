@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2, Check } from 'lucide-react';
 import { Modal } from './ui/Modal';
+import { useAuth } from '@clerk/clerk-react';
 
 interface NewDocumentModalProps {
   isOpen: boolean;
@@ -9,17 +10,17 @@ interface NewDocumentModalProps {
 }
 
 export const NewDocumentModal = ({ isOpen, onClose, onSuccess }: NewDocumentModalProps) => {
+  const { getToken } = useAuth();
+  
   const [type, setType] = useState<'PZ' | 'WZ'>('PZ');
   const [contractorId, setContractorId] = useState('');
   const [items, setItems] = useState([{ product_id: '', quantity: 1 }]);
   
-  // Dane z API
   const [availableProducts, setAvailableProducts] = useState<any[]>([]);
   const [availableContractors, setAvailableContractors] = useState<any[]>([]);
 
   useEffect(() => {
     if (isOpen) {
-      // Pobierz dane potrzebne do formularza
       fetch('/api/products').then(res => res.json()).then(setAvailableProducts);
       fetch('/api/contractors').then(res => res.json()).then(setAvailableContractors);
     }
@@ -30,6 +31,8 @@ export const NewDocumentModal = ({ isOpen, onClose, onSuccess }: NewDocumentModa
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const token = await getToken();
     
     const payload = {
       type,
@@ -43,19 +46,21 @@ export const NewDocumentModal = ({ isOpen, onClose, onSuccess }: NewDocumentModa
     try {
       const res = await fetch('/api/documents', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
         body: JSON.stringify(payload)
       });
 
       if (res.ok) {
         onSuccess();
         onClose();
-        // Reset formularza
         setContractorId('');
         setItems([{ product_id: '', quantity: 1 }]);
       } else {
         const errorData = await res.json();
-        alert(`Błąd: ${JSON.stringify(errorData.detail)}`);
+        alert(`Błąd: ${JSON.stringify(errorData.detail || errorData)}`);
       }
     } catch (err) {
       console.error(err);

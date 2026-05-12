@@ -1,62 +1,81 @@
 from app.database import SessionLocal
 from app.models import Product, Contractor, Document, DocumentItem, DocType
 from datetime import datetime, timezone
+import random
 
 def seed_db():
     db = SessionLocal()
     try:
         if db.query(Contractor).count() == 0:
-            c1 = Contractor(name="Logistyka Plus Sp. z o.o.", nip="5210001234")
-            c2 = Contractor(name="Hurtownia Tech-Spec", nip="7770005566")
-            db.add_all([c1, c2])
+            contractors_data = [
+                ("Logistyka Plus Sp. z o.o.", "5210001234"),
+                ("Hurtownia Tech-Spec", "7770005566"),
+                ("Ełka Trans S.A.", "9812345678"),
+                ("Omega-System", "3627481920"),
+                ("Skład IT J. Kowalski", "679112233"),
+                ("Digital House s.c.", "5862374812"),
+                ("OptiMarket Sp. j.", "7541938462"),
+                ("Firma Handlowa Multi-Tech", "8362547291"),
+                ("Technika Jądrowa S.A.", "2891037465"),
+                ("Serwis24 Sp. z o.o.", "4251893674"),
+            ]
+            contractors = [
+                Contractor(name=name, nip=nip)
+                for name, nip in contractors_data
+            ]
+            db.add_all(contractors)
             db.commit()
-            print("Dodano kontrahentów.")
+            print("Dodano 10 kontrahentów.")
 
         if db.query(Product).count() == 0:
-            p1 = Product(sku="APP-001", name="iPhone 15 Pro", stock_quantity=10, unit="szt")
-            p2 = Product(sku="SAM-099", name="Monitor Samsung 32'", stock_quantity=5, unit="szt")
-            db.add_all([p1, p2])
+            products_data = [
+                ("APP-001", "iPhone 15 Pro", 10, "szt"),
+                ("SAM-099", "Monitor Samsung 32'", 5, "szt"),
+                ("LAP-200", "Dell XPS 13", 7, "szt"),
+                ("CLV-301", "Klawiatura mechaniczna Logitech", 15, "szt"),
+                ("MS-050", "Mysz bezprzewodowa MX Master 3", 20, "szt"),
+                ("MON-081", "Stojak pod monitor", 12, "szt"),
+                ("PEN-128", "Dysk SSD 1TB Samsung", 8, "szt"),
+                ("HDMI-5M", "Kabel HDMI 5m", 30, "szt"),
+                ("USB-C", "Hub USB-C 7w1", 18, "szt"),
+                ("WEBC-4K", "Kamera internetowa 4K Logitech", 6, "szt"),
+            ]
+            products = [
+                Product(sku=sku, name=name, stock_quantity=stock, unit=unit)
+                for sku, name, stock, unit in products_data
+            ]
+            db.add_all(products)
             db.commit()
-            print("Dodano produkty.")
+            print("Dodano 10 produktów.")
 
         if db.query(Document).count() == 0:
-            kontrahent = db.query(Contractor).first()
-            produkt = db.query(Product).first()
+            kontrahenci = db.query(Contractor).all()
+            produkty = db.query(Product).all()
 
-            doc_pz = Document(
-                type=DocType.PZ,
-                contractor_id=kontrahent.id,
-                created_by="system_seed",
-                created_at=datetime.now(timezone.utc)
-            )
-            db.add(doc_pz)
-            db.flush()
+            documents = []
+            for i in range(10):
+                doc_type = DocType.PZ if i < 5 else DocType.WZ
+                contractor = random.choice(kontrahenci)
+                doc = Document(
+                    type=doc_type,
+                    contractor_id=contractor.id,
+                    created_by="system_seed",
+                    created_at=datetime.now(timezone.utc)
+                )
+                db.add(doc)
+                db.flush()
+                documents.append(doc)
 
-            item_pz = DocumentItem(
-                document_id=doc_pz.id,
-                product_id=produkt.id,
-                quantity=5
-            )
-            db.add(item_pz)
-
-            doc_wz = Document(
-                type=DocType.WZ,
-                contractor_id=kontrahent.id,
-                created_by="system_seed",
-                created_at=datetime.now(timezone.utc)
-            )
-            db.add(doc_wz)
-            db.flush()
-
-            item_wz = DocumentItem(
-                document_id=doc_wz.id,
-                product_id=produkt.id,
-                quantity=2
-            )
-            db.add(item_wz)
+                product = random.choice(produkty)
+                item = DocumentItem(
+                    document_id=doc.id,
+                    product_id=product.id,
+                    quantity=random.randint(1, 10)
+                )
+                db.add(item)
 
             db.commit()
-            print("Dodano przykładowe dokumenty PZ/WZ.")
+            print("Dodano 10 dokumentów PZ/WZ z pozycjami.")
 
     except Exception as e:
         print(f"Błąd: {e}")
