@@ -58,8 +58,8 @@ export const DocumentDetailsModal = ({ isOpen, onClose, document }: DocumentDeta
     switch (type) {
       case 'PZ': return 'Przyjęcie (PZ)';
       case 'WZ': return 'Wydanie (WZ)';
-      case 'ZW': return 'Zbiór Wew. (ZW)';
-      case 'RW': return 'Rozchód Wew. (RW)';
+      case 'ZW': return 'Zbiór Wewnętrzny (ZW)';
+      case 'RW': return 'Rozchód Wewnętrzny (RW)';
       default: return type;
     }
   };
