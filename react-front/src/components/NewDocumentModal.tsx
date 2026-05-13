@@ -12,7 +12,7 @@ interface NewDocumentModalProps {
 export const NewDocumentModal = ({ isOpen, onClose, onSuccess }: NewDocumentModalProps) => {
   const { getToken } = useAuth();
   
-  const [type, setType] = useState<'PZ' | 'WZ'>('PZ');
+  const [type, setType] = useState<'PZ' | 'WZ' | 'ZW' | 'RW'>('PZ');
   const [contractorId, setContractorId] = useState('');
   const [items, setItems] = useState([{ product_id: '', quantity: 1 }]);
   
@@ -36,7 +36,7 @@ export const NewDocumentModal = ({ isOpen, onClose, onSuccess }: NewDocumentModa
     
     const payload = {
       type,
-      contractor_id: parseInt(contractorId),
+      contractor_id: (type === 'PZ' || type === 'WZ') ? parseInt(contractorId) : null,
       items: items.map(item => ({
         product_id: parseInt(item.product_id),
         quantity: parseFloat(item.quantity.toString())
@@ -76,27 +76,31 @@ export const NewDocumentModal = ({ isOpen, onClose, onSuccess }: NewDocumentModa
             <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Typ</label>
             <select 
               value={type} 
-              onChange={(e) => setType(e.target.value as 'PZ' | 'WZ')}
+              onChange={(e) => setType(e.target.value as 'PZ' | 'WZ' | 'ZW' | 'RW')}
               className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-sm"
             >
               <option value="PZ">PZ - Przyjęcie</option>
               <option value="WZ">WZ - Wydanie</option>
+              <option value="ZW">ZW - Zwrot do magazynu</option>
+              <option value="RW">RW - Rozchód wewnętrzny</option>
             </select>
           </div>
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Kontrahent</label>
-            <select 
-              required
-              value={contractorId}
-              onChange={(e) => setContractorId(e.target.value)}
-              className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-sm"
-            >
-              <option value="">Wybierz...</option>
-              {availableContractors.map(c => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </div>
+          {(type === 'PZ' || type === 'WZ') && (
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Kontrahent</label>
+              <select 
+                required
+                value={contractorId}
+                onChange={(e) => setContractorId(e.target.value)}
+                className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-sm"
+              >
+                <option value="">Wybierz...</option>
+                {availableContractors.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         {/* Pozycje dokumentu */}
