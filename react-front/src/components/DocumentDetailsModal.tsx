@@ -1,25 +1,7 @@
 import React, { useRef } from 'react';
 import { X, Printer, Calendar, User, Package, Hash } from 'lucide-react';
 import { Modal } from './ui/Modal';
-
-interface DocumentItem {
-  product_id: number;
-  quantity: number;
-  product: {
-    sku: string;
-    name: string;
-    unit: string;
-  };
-}
-
-interface Document {
-  id: number;
-  type: 'PZ' | 'WZ' | 'ZW' | 'RW';
-  created_at: string;
-  created_by?: string;
-  contractor_name?: string;
-  items: DocumentItem[];
-}
+import { Document } from '../types';
 
 interface DocumentDetailsModalProps {
   isOpen: boolean;

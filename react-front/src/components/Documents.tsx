@@ -3,25 +3,7 @@ import { FileText, Plus, ArrowUpRight, ArrowDownLeft, Calendar, User } from 'luc
 import { motion } from 'motion/react';
 import { NewDocumentModal } from './NewDocumentModal';
 import { DocumentDetailsModal } from './DocumentDetailsModal';
-
-interface DocumentItem {
-  product_id: number;
-  quantity: number;
-  product: {
-    sku: string;
-    name: string;
-    unit: string;
-  };
-}
-
-interface Document {
-  id: number;
-  type: 'PZ' | 'WZ' | 'ZW' | 'RW';
-  contractor_name: string;
-  created_at: string;
-  created_by?: string;
-  items: DocumentItem[];
-}
+import { Document } from '../types';
 
 export const Documents = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -100,7 +82,7 @@ export const Documents = () => {
                       <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
                         (doc.type === 'PZ' || doc.type === 'ZW') ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
                       }`}>
-                        {doc.type === 'PZ' ? 'Przyjęcie' : doc.type === 'WZ' ? 'Wydanie' : doc.type === 'ZW' ? 'Zbiór Wew.' : 'Rozchód Wew.'}
+                        {doc.type === 'PZ' ? 'Przyjęcie' : doc.type === 'WZ' ? 'Wydanie' : doc.type === 'ZW' ? 'Zbiór Wewnętrzny' : 'Rozchód Wewnętrzny'}
                       </span>
                     </div>
                     <h3 className="font-bold text-on-surface">{doc.contractor_name || 'Dokument wewnętrzny'}</h3>

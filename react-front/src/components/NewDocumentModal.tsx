@@ -81,8 +81,8 @@ export const NewDocumentModal = ({ isOpen, onClose, onSuccess }: NewDocumentModa
             >
               <option value="PZ">PZ - Przyjęcie</option>
               <option value="WZ">WZ - Wydanie</option>
-              <option value="ZW">ZW - Zwrot do magazynu</option>
-              <option value="RW">RW - Rozchód wewnętrzny</option>
+              <option value="ZW">ZW - Zbiór Wewnętrzny</option>
+              <option value="RW">RW - Rozchód Wewnętrzny</option>
             </select>
           </div>
           {(type === 'PZ' || type === 'WZ') && (

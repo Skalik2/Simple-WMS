@@ -3,35 +3,16 @@ import { Package, Users, FileText, ArrowUpRight, ArrowDownLeft } from 'lucide-re
 import { motion } from 'motion/react';
 import { ACTION_CARDS } from '../constants';
 import { DocumentDetailsModal } from './DocumentDetailsModal';
-
-interface DocumentItem {
-  product_id: number;
-  quantity: number;
-  product: {
-    sku: string;
-    name: string;
-    unit: string;
-  };
-}
-
-interface RecentDocument {
-  id: number;
-  document_number?: string;
-  type: string;
-  contractor_name: string;
-  created_at: string;
-  created_by?: string;
-  items: DocumentItem[];
-}
+import { Document } from '../types';
 
 interface DashboardProps {
   onActionClick?: (type: string) => void;
 }
 
 export const Dashboard = ({ onActionClick }: DashboardProps) => {
-  const [recentDocs, setRecentDocs] = useState<RecentDocument[]>([]);
+  const [recentDocs, setRecentDocs] = useState<Document[]>([]);
   const [stats, setStats] = useState({ products: 0, contractors: 0, documents: 0 });
-  const [selectedDoc, setSelectedDoc] = useState<RecentDocument | null>(null);
+  const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   useEffect(() => {
@@ -48,7 +29,7 @@ export const Dashboard = ({ onActionClick }: DashboardProps) => {
     });
   }, []);
 
-  const handleDocClick = (doc: RecentDocument) => {
+  const handleDocClick = (doc: Document) => {
     setSelectedDoc(doc);
     setIsDetailsOpen(true);
   };
@@ -110,13 +91,15 @@ export const Dashboard = ({ onActionClick }: DashboardProps) => {
                   className="hover:bg-surface-bright transition-colors cursor-pointer"
                 >
                   <td className="px-6 py-4">
-                    <span className={`flex items-center gap-2 text-xs font-bold ${doc.type === 'PZ' ? 'text-green-600' : 'text-blue-600'}`}>
-                      {doc.type === 'PZ' ? <ArrowDownLeft size={14}/> : <ArrowUpRight size={14}/>}
+                    <span className={`flex items-center gap-2 text-xs font-bold ${
+                      (doc.type === 'PZ' || doc.type === 'ZW') ? 'text-green-600' : 'text-blue-600'
+                    }`}>
+                      {(doc.type === 'PZ' || doc.type === 'ZW') ? <ArrowDownLeft size={14}/> : <ArrowUpRight size={14}/>}
                       {doc.type}
                     </span>
                   </td>
                   <td className="px-6 py-4 font-mono text-xs">#{doc.id}</td>
-                  <td className="px-6 py-4 text-sm font-medium">{doc.contractor_name || 'Brak'}</td>
+                  <td className="px-6 py-4 text-sm font-medium">{doc.contractor_name || 'Wewnętrzny'}</td>
                   <td className="px-6 py-4 text-xs text-on-surface-variant">
                     {new Date(doc.created_at).toLocaleString('pl-PL')}
                   </td>
