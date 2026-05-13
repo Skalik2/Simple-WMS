@@ -39,7 +39,7 @@ export const NewDocumentModal = ({ isOpen, onClose, onSuccess }: NewDocumentModa
       contractor_id: (type === 'PZ' || type === 'WZ') ? parseInt(contractorId) : null,
       items: items.map(item => ({
         product_id: parseInt(item.product_id),
-        quantity: parseFloat(item.quantity.toString())
+        quantity: parseInt(item.quantity.toString())
       }))
     };
 
@@ -81,7 +81,7 @@ export const NewDocumentModal = ({ isOpen, onClose, onSuccess }: NewDocumentModa
             >
               <option value="PZ">PZ - Przyjęcie</option>
               <option value="WZ">WZ - Wydanie</option>
-              <option value="ZW">ZW - Zbiór Wewnętrzny</option>
+              <option value="ZW">ZW - Zwrot Wewnętrzny</option>
               <option value="RW">RW - Rozchód Wewnętrzny</option>
             </select>
           </div>

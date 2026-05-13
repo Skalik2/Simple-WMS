@@ -72,17 +72,21 @@ export const Documents = () => {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                   <div className={`p-3 rounded-xl ${
-                    (doc.type === 'PZ' || doc.type === 'ZW') ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                    (doc.type === 'PZ' || doc.type === 'ZW' || doc.type === 'PW') ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
                   }`}>
-                    {(doc.type === 'PZ' || doc.type === 'ZW') ? <ArrowDownLeft size={24} /> : <ArrowUpRight size={24} />}
+                    {(doc.type === 'PZ' || doc.type === 'ZW' || doc.type === 'PW') ? <ArrowDownLeft size={24} /> : <ArrowUpRight size={24} />}
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-mono text-xs font-bold text-primary">{doc.type}/{doc.id}</span>
                       <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
-                        (doc.type === 'PZ' || doc.type === 'ZW') ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                        (doc.type === 'PZ' || doc.type === 'ZW' || doc.type === 'PW') ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
                       }`}>
-                        {doc.type === 'PZ' ? 'Przyjęcie' : doc.type === 'WZ' ? 'Wydanie' : doc.type === 'ZW' ? 'Zbiór Wewnętrzny' : 'Rozchód Wewnętrzny'}
+                        {doc.type === 'PZ' ? 'Przyjęcie' : 
+                         doc.type === 'WZ' ? 'Wydanie' : 
+                         doc.type === 'ZW' ? 'Zwrot Wewnętrzny' : 
+                         doc.type === 'PW' ? 'Przychód Wewnętrzny' : 
+                         'Rozchód Wewnętrzny'}
                       </span>
                     </div>
                     <h3 className="font-bold text-on-surface">{doc.contractor_name || 'Dokument wewnętrzny'}</h3>

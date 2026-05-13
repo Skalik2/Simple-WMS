@@ -30,7 +30,8 @@ export const DocumentDetailsModal = ({ isOpen, onClose, document }: DocumentDeta
     switch (type) {
       case 'PZ': return 'Przyjęcie Zewnętrzne';
       case 'WZ': return 'Wydanie Zewnętrzne';
-      case 'ZW': return 'Zbiór Wewnętrzny';
+      case 'ZW': return 'Zwrot Wewnętrzny';
+      case 'PW': return 'Przychód Wewnętrzny';
       case 'RW': return 'Rozchód Wewnętrzny';
       default: return 'Dokument';
     }
@@ -40,7 +41,8 @@ export const DocumentDetailsModal = ({ isOpen, onClose, document }: DocumentDeta
     switch (type) {
       case 'PZ': return 'Przyjęcie (PZ)';
       case 'WZ': return 'Wydanie (WZ)';
-      case 'ZW': return 'Zbiór Wewnętrzny (ZW)';
+      case 'ZW': return 'Zwrot Wewnętrzny (ZW)';
+      case 'PW': return 'Przychód Wewnętrzny (PW)';
       case 'RW': return 'Rozchód Wewnętrzny (RW)';
       default: return type;
     }
@@ -106,7 +108,7 @@ export const DocumentDetailsModal = ({ isOpen, onClose, document }: DocumentDeta
                 <div>
                   <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Typ dokumentu</p>
                   <span className={`inline-block px-2 py-0.5 rounded text-xs font-bold uppercase ${
-                    (document.type === 'PZ' || document.type === 'ZW') ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                    (document.type === 'PZ' || document.type === 'ZW' || document.type === 'PW') ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
                   }`}>
                     {getDocLabel(document.type)}
                   </span>
