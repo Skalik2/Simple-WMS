@@ -16,7 +16,7 @@ interface DocumentItem {
 
 interface Document {
   id: number;
-  type: 'PZ' | 'WZ';
+  type: 'PZ' | 'WZ' | 'ZW' | 'RW';
   contractor_name: string;
   created_at: string;
   created_by?: string;
@@ -59,7 +59,7 @@ export const Documents = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h2 className="text-3xl font-bold text-on-surface tracking-tight">Dokumenty</h2>
-          <p className="text-on-surface-variant">Zarządzaj przyjęciami (PZ) i wydaniami (WZ) towaru.</p>
+          <p className="text-on-surface-variant">Zarządzaj dokumentami PZ, WZ, ZW i RW.</p>
         </div>
         <button 
           onClick={() => setIsModalOpen(true)}
@@ -90,20 +90,20 @@ export const Documents = () => {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                   <div className={`p-3 rounded-xl ${
-                    doc.type === 'PZ' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                    (doc.type === 'PZ' || doc.type === 'ZW') ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
                   }`}>
-                    {doc.type === 'PZ' ? <ArrowDownLeft size={24} /> : <ArrowUpRight size={24} />}
+                    {(doc.type === 'PZ' || doc.type === 'ZW') ? <ArrowDownLeft size={24} /> : <ArrowUpRight size={24} />}
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-mono text-xs font-bold text-primary">{doc.type}/{doc.id}</span>
                       <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
-                        doc.type === 'PZ' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                        (doc.type === 'PZ' || doc.type === 'ZW') ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
                       }`}>
-                        {doc.type === 'PZ' ? 'Przyjęcie' : 'Wydanie'}
+                        {doc.type === 'PZ' ? 'Przyjęcie' : doc.type === 'WZ' ? 'Wydanie' : doc.type === 'ZW' ? 'Zbiór Wew.' : 'Rozchód Wew.'}
                       </span>
                     </div>
-                    <h3 className="font-bold text-on-surface">{doc.contractor_name || 'Brak kontrahenta'}</h3>
+                    <h3 className="font-bold text-on-surface">{doc.contractor_name || 'Dokument wewnętrzny'}</h3>
                   </div>
                 </div>
 

@@ -14,7 +14,7 @@ interface DocumentItem {
 
 interface Document {
   id: number;
-  type: string;
+  type: 'PZ' | 'WZ' | 'ZW' | 'RW';
   created_at: string;
   created_by?: string;
   contractor_name?: string;
@@ -44,6 +44,26 @@ export const DocumentDetailsModal = ({ isOpen, onClose, document }: DocumentDeta
     minute: '2-digit',
   });
 
+  const getDocFullTitle = (type: string) => {
+    switch (type) {
+      case 'PZ': return 'Przyjęcie Zewnętrzne';
+      case 'WZ': return 'Wydanie Zewnętrzne';
+      case 'ZW': return 'Zbiór Wewnętrzny';
+      case 'RW': return 'Rozchód Wewnętrzny';
+      default: return 'Dokument';
+    }
+  };
+
+  const getDocLabel = (type: string) => {
+    switch (type) {
+      case 'PZ': return 'Przyjęcie (PZ)';
+      case 'WZ': return 'Wydanie (WZ)';
+      case 'ZW': return 'Zbiór Wew. (ZW)';
+      case 'RW': return 'Rozchód Wew. (RW)';
+      default: return type;
+    }
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={`Szczegóły dokumentu #${document.id}`}>
       <div className="space-y-6">
@@ -68,7 +88,7 @@ export const DocumentDetailsModal = ({ isOpen, onClose, document }: DocumentDeta
                 <p className="text-sm font-medium text-gray-600">Global Logistics Solution</p>
               </div>
               <div className="text-right">
-                <h2 className="text-xl font-bold">{document.type === 'PZ' ? 'Przyjęcie Zewnętrzne' : 'Wydanie Zewnętrzne'}</h2>
+                <h2 className="text-xl font-bold">{getDocFullTitle(document.type)}</h2>
                 <p className="text-lg font-mono font-bold">Nr: {document.type}/{document.id}/{new Date(document.created_at).getFullYear()}</p>
               </div>
             </div>
@@ -92,7 +112,7 @@ export const DocumentDetailsModal = ({ isOpen, onClose, document }: DocumentDeta
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Kontrahent</p>
-                  <p className="font-bold text-lg">{document.contractor_name || 'Brak danych'}</p>
+                  <p className="font-bold text-lg">{document.contractor_name || 'Dokument wewnętrzny'}</p>
                 </div>
               </div>
             </div>
@@ -104,9 +124,9 @@ export const DocumentDetailsModal = ({ isOpen, onClose, document }: DocumentDeta
                 <div>
                   <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Typ dokumentu</p>
                   <span className={`inline-block px-2 py-0.5 rounded text-xs font-bold uppercase ${
-                    document.type === 'PZ' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                    (document.type === 'PZ' || document.type === 'ZW') ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
                   }`}>
-                    {document.type === 'PZ' ? 'Przyjęcie (PZ)' : 'Wydanie (WZ)'}
+                    {getDocLabel(document.type)}
                   </span>
                 </div>
               </div>
