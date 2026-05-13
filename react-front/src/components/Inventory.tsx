@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Box, MapPin, Package, Plus, Check } from 'lucide-react';
+import { Box, MapPin, Package, Plus, Check, Settings2 } from 'lucide-react';
 import { Modal } from './ui/Modal';
+import { AssemblyModal } from './AssemblyModal';
 
 // Typ określający budowę produktu z API
 interface Product {
@@ -16,6 +17,7 @@ interface Product {
 export const Inventory = () => {
   const [items, setItems] = useState<Product[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAssemblyModalOpen, setIsAssemblyModalOpen] = useState(false);
 
   // Pobieranie produktów z API
   const fetchProducts = async () => {
@@ -71,13 +73,22 @@ export const Inventory = () => {
           <h2 className="text-3xl font-bold text-on-surface tracking-tight">Inwentarz</h2>
           <p className="text-on-surface-variant">Zarządzaj zapasami i lokalizacjami towarów.</p>
         </div>
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl shadow-lg hover:shadow-primary/20 hover:scale-105 transition-all"
-        >
-          <Plus size={20} />
-          <span className="font-bold text-sm">Dodaj produkt</span>
-        </button>
+        <div className="flex gap-2">
+          <button 
+            onClick={() => setIsAssemblyModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-secondary text-white rounded-xl shadow-lg hover:shadow-secondary/20 hover:scale-105 transition-all"
+          >
+            <Settings2 size={20} />
+            <span className="font-bold text-sm">Złóż produkt</span>
+          </button>
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl shadow-lg hover:shadow-primary/20 hover:scale-105 transition-all"
+          >
+            <Plus size={20} />
+            <span className="font-bold text-sm">Dodaj produkt</span>
+          </button>
+        </div>
       </div>
 
       {/* Tabela produktów */}
@@ -153,6 +164,12 @@ export const Inventory = () => {
           </div>
         </form>
       </Modal>
+
+      <AssemblyModal 
+        isOpen={isAssemblyModalOpen} 
+        onClose={() => setIsAssemblyModalOpen(false)} 
+        onAssemblySuccess={fetchProducts} 
+      />
     </div>
   );
 };
