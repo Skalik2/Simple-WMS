@@ -29,6 +29,10 @@
   --color-secondary-container: #d5e3fc;
   --color-secondary-fixed: #d5e3fc;
   
+  --color-tertiary: #6b5c00;
+  --color-tertiary-container: #efdf91;
+  --color-on-tertiary: #ffffff;
+
   --color-outline: #727785;
   --color-outline-variant: #c2c6d6;
 }

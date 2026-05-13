@@ -1,26 +1,44 @@
 import React, { useEffect, useState } from 'react';
-import { Package, Users, FileText, TrendingUp, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import { Package, Users, FileText, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import { motion } from 'motion/react';
+import { ACTION_CARDS } from '../constants';
+import { DocumentDetailsModal } from './DocumentDetailsModal';
+
+interface DocumentItem {
+  product_id: number;
+  quantity: number;
+  product: {
+    sku: string;
+    name: string;
+    unit: string;
+  };
+}
 
 interface RecentDocument {
   id: number;
-  document_number?: string; // Jeśli masz logikę numeracji, lub użyj ID
+  document_number?: string;
   type: string;
   contractor_name: string;
   created_at: string;
+  created_by?: string;
+  items: DocumentItem[];
 }
 
-export const Dashboard = () => {
+interface DashboardProps {
+  onActionClick?: (type: string) => void;
+}
+
+export const Dashboard = ({ onActionClick }: DashboardProps) => {
   const [recentDocs, setRecentDocs] = useState<RecentDocument[]>([]);
   const [stats, setStats] = useState({ products: 0, contractors: 0, documents: 0 });
+  const [selectedDoc, setSelectedDoc] = useState<RecentDocument | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   useEffect(() => {
-    // Pobieranie dokumentów do tabeli
     fetch('/api/documents')
       .then(res => res.json())
-      .then(data => setRecentDocs(data.slice(0, 5))); // Tylko 5 ostatnich
+      .then(data => setRecentDocs(data.slice(0, 5)));
 
-    // Pobieranie statystyk (uproszczone pobranie długości list)
     Promise.all([
       fetch('/api/products').then(res => res.json()),
       fetch('/api/contractors').then(res => res.json()),
@@ -30,15 +48,43 @@ export const Dashboard = () => {
     });
   }, []);
 
+  const handleDocClick = (doc: RecentDocument) => {
+    setSelectedDoc(doc);
+    setIsDetailsOpen(true);
+  };
+
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto w-full">
       <h2 className="text-3xl font-bold text-on-surface mb-8 tracking-tight">Dashboard</h2>
       
-      {/* Statystyki */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-        <StatCard title="Produkty" value={stats.products} icon={<Package />} color="bg-primary" />
-        <StatCard title="Kontrahenci" value={stats.contractors} icon={<Users />} color="bg-secondary" />
-        <StatCard title="Dokumenty" value={stats.documents} icon={<FileText />} color="bg-tertiary" />
+        <StatCard title="Produkty" value={stats.products} icon={<Package size={24} />} color="bg-primary" />
+        <StatCard title="Kontrahenci" value={stats.contractors} icon={<Users size={24} />} color="bg-secondary" />
+        <StatCard title="Dokumenty" value={stats.documents} icon={<FileText size={24} />} color="bg-tertiary" />
+      </div>
+
+      {/* Szybkie akcje */}
+      <div className="mb-10">
+        <h3 className="text-sm font-bold text-on-surface-variant uppercase tracking-widest mb-4">Szybkie akcje</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {ACTION_CARDS.map((card) => (
+            <button
+              key={card.id}
+              onClick={() => onActionClick?.(card.code)}
+              className="flex flex-col items-center gap-3 p-6 bg-surface-container-lowest border border-outline-variant rounded-2xl hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all group text-center"
+            >
+              <div className={`p-4 rounded-xl ${
+                card.variant === 'primary' ? 'bg-primary/10 text-primary' : 'bg-secondary/10 text-secondary'
+              } group-hover:scale-110 transition-transform`}>
+                <card.icon size={28} />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-primary mb-1">{card.code}</p>
+                <p className="text-sm font-medium text-on-surface leading-tight">{card.title}</p>
+              </div>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Tabela ostatnich dokumentów */}
@@ -58,7 +104,11 @@ export const Dashboard = () => {
             </thead>
             <tbody className="divide-y divide-surface-container-high">
               {recentDocs.map((doc, idx) => (
-                <tr key={doc.id} className="hover:bg-surface-bright transition-colors">
+                <tr 
+                  key={doc.id} 
+                  onClick={() => handleDocClick(doc)}
+                  className="hover:bg-surface-bright transition-colors cursor-pointer"
+                >
                   <td className="px-6 py-4">
                     <span className={`flex items-center gap-2 text-xs font-bold ${doc.type === 'PZ' ? 'text-green-600' : 'text-blue-600'}`}>
                       {doc.type === 'PZ' ? <ArrowDownLeft size={14}/> : <ArrowUpRight size={14}/>}
@@ -76,6 +126,12 @@ export const Dashboard = () => {
           </table>
         </div>
       </div>
+
+      <DocumentDetailsModal 
+        isOpen={isDetailsOpen}
+        onClose={() => setIsDetailsOpen(false)}
+        document={selectedDoc}
+      />
     </div>
   );
 };

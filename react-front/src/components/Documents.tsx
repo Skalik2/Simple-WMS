@@ -2,19 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { FileText, Plus, ArrowUpRight, ArrowDownLeft, Calendar, User } from 'lucide-react';
 import { motion } from 'motion/react';
 import { NewDocumentModal } from './NewDocumentModal';
+import { DocumentDetailsModal } from './DocumentDetailsModal';
 
 interface DocumentItem {
-  id: number;
-  product_name: string;
+  product_id: number;
   quantity: number;
+  product: {
+    sku: string;
+    name: string;
+    unit: string;
+  };
 }
 
 interface Document {
   id: number;
-  document_number: string;
   type: 'PZ' | 'WZ';
   contractor_name: string;
   created_at: string;
+  created_by?: string;
   items: DocumentItem[];
 }
 
@@ -22,6 +27,8 @@ export const Documents = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   const fetchDocuments = async () => {
     setLoading(true);
@@ -41,6 +48,11 @@ export const Documents = () => {
   useEffect(() => {
     fetchDocuments();
   }, []);
+
+  const handleDocClick = (doc: Document) => {
+    setSelectedDoc(doc);
+    setIsDetailsOpen(true);
+  };
 
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto w-full">
@@ -72,6 +84,7 @@ export const Documents = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.05 }}
+              onClick={() => handleDocClick(doc)}
               className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 hover:border-primary/50 transition-colors cursor-pointer group"
             >
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -83,7 +96,7 @@ export const Documents = () => {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs font-bold text-primary">{doc.document_number}</span>
+                      <span className="font-mono text-xs font-bold text-primary">{doc.type}/{doc.id}</span>
                       <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
                         doc.type === 'PZ' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
                       }`}>
@@ -114,6 +127,12 @@ export const Documents = () => {
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         onSuccess={fetchDocuments}
+      />
+
+      <DocumentDetailsModal 
+        isOpen={isDetailsOpen}
+        onClose={() => setIsDetailsOpen(false)}
+        document={selectedDoc}
       />
     </div>
   );

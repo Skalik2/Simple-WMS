@@ -77,6 +77,29 @@ def seed_db():
             db.commit()
             print("Dodano 10 dokumentów PZ/WZ z pozycjami.")
 
+        # Check if recipes already exist to avoid duplicates
+        from app import models
+        if db.query(models.RecipeItem).count() == 0:
+            # 1. Create semi-finished products
+            noga = models.Product(sku="NOGA-01", name="Noga stołowa", type="POLPRODUKT", stock_quantity=100, unit="szt")
+            blat = models.Product(sku="BLAT-01", name="Blat dębowy", type="POLPRODUKT", stock_quantity=20, unit="szt")
+            db.add_all([noga, blat])
+            db.flush()
+
+            # 2. Create a finished product
+            stol = models.Product(sku="STOL-01", name="Stół dębowy", type="PRODUKT", stock_quantity=0, unit="szt")
+            db.add(stol)
+            db.flush()
+
+            # 3. Create recipe: 1 Stół = 4 Nogi + 1 Blat
+            recipe = [
+                models.RecipeItem(parent_product_id=stol.id, component_product_id=noga.id, quantity=4),
+                models.RecipeItem(parent_product_id=stol.id, component_product_id=blat.id, quantity=1)
+            ]
+            db.add_all(recipe)
+            db.commit()
+            print("Dodano przykładowe półprodukty i recepturę stołu.")
+
     except Exception as e:
         print(f"Błąd: {e}")
         db.rollback()
