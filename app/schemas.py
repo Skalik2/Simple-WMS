@@ -67,3 +67,7 @@ class RecipeItemCreate(BaseModel):
 class RecipeCreate(BaseModel):
     parent_product_id: int
     items: List[RecipeItemCreate]
+
+class ProductAssembly(BaseModel):
+    product_id: int
+    quantity: int

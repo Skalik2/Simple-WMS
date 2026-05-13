@@ -112,3 +112,44 @@ def create_recipe(db: Session, recipe_data: schemas.RecipeCreate):
 
 def get_recipe(db: Session, parent_id: int):
     return db.query(models.RecipeItem).filter(models.RecipeItem.parent_product_id == parent_id).all()
+
+def assemble_product(db: Session, assembly_data: schemas.ProductAssembly, user_id: str):
+    product = db.query(models.Product).filter(models.Product.id == assembly_data.product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Produkt nie istnieje.")
+
+    recipe_items = db.query(models.RecipeItem).filter(models.RecipeItem.parent_product_id == product.id).all()
+    if not recipe_items:
+        raise HTTPException(status_code=400, detail="Produkt nie ma zdefiniowanej receptury.")
+
+    # 1. Validate components stock
+    for r_item in recipe_items:
+        comp = db.query(models.Product).filter(models.Product.id == r_item.component_product_id).first()
+        required_qty = r_item.quantity * assembly_data.quantity
+        if not comp or comp.stock_quantity < required_qty:
+            raise HTTPException(status_code=400, detail=f"Brak półproduktu: {comp.name if comp else 'Nieznany'}")
+
+    # 2. Create RW (Internal Issue) for components
+    rw_doc = models.Document(type=models.DocType.RW, created_by=user_id)
+    db.add(rw_doc)
+    db.flush()
+
+    for r_item in recipe_items:
+        comp = db.query(models.Product).filter(models.Product.id == r_item.component_product_id).first()
+        qty_to_issue = r_item.quantity * assembly_data.quantity
+        comp.stock_quantity -= qty_to_issue
+
+        db_item = models.DocumentItem(document_id=rw_doc.id, product_id=comp.id, quantity=qty_to_issue)
+        db.add(db_item)
+
+    # 3. Create PW (Internal Receipt) for product
+    pw_doc = models.Document(type=models.DocType.PW, created_by=user_id)
+    db.add(pw_doc)
+    db.flush()
+
+    product.stock_quantity += assembly_data.quantity
+    db_item = models.DocumentItem(document_id=pw_doc.id, product_id=product.id, quantity=assembly_data.quantity)
+    db.add(db_item)
+
+    db.commit()
+    return {"message": "Złożono pomyślnie", "product": product.name, "quantity": assembly_data.quantity}
