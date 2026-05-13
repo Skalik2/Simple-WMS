@@ -23,7 +23,7 @@ class DocumentItemCreate(BaseModel):
 
 class DocumentCreate(BaseModel):
     type: DocType
-    contractor_id: int
+    contractor_id: int | None = None
     items: List[DocumentItemCreate]
 
 class ProductResponse(BaseModel):
