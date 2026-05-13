@@ -59,6 +59,19 @@ async def get_product_recipe(product_id: int, db: Session = Depends(get_db)):
         } for item in recipe_items
     ]
 
+@router.post("/products/assemble")
+async def assemble_product(
+    data: schemas.ProductAssembly, 
+    db: Session = Depends(get_db),
+    user_id: str = Depends(get_current_user_id)
+):
+    try:
+        return crud.assemble_product(db=db, assembly_data=data, user_id=user_id)
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/contractors", response_model=List[schemas.ContractorResponse])
 async def read_contractors(db: Session = Depends(get_db)):
     return crud.get_contractors(db)
