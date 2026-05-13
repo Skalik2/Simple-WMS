@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Box, MapPin, Package, Plus, Check, Settings2 } from 'lucide-react';
 import { Modal } from './ui/Modal';
 import { AssemblyModal } from './AssemblyModal';
+import { ProductDetailsModal } from './ProductDetailsModal';
 
 // Typ określający budowę produktu z API
 interface Product {
@@ -18,6 +19,7 @@ export const Inventory = () => {
   const [items, setItems] = useState<Product[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAssemblyModalOpen, setIsAssemblyModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   // Pobieranie produktów z API
   const fetchProducts = async () => {
@@ -113,6 +115,7 @@ export const Inventory = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: idx * 0.05 }}
+                  onClick={() => setSelectedProduct(item)}
                   className="hover:bg-surface-bright transition-colors cursor-pointer group"
                 >
                   <td className="px-6 py-4 font-mono text-xs font-semibold text-primary">
@@ -169,6 +172,13 @@ export const Inventory = () => {
         isOpen={isAssemblyModalOpen} 
         onClose={() => setIsAssemblyModalOpen(false)} 
         onAssemblySuccess={fetchProducts} 
+      />
+
+      <ProductDetailsModal 
+        isOpen={!!selectedProduct}
+        product={selectedProduct}
+        onClose={() => setSelectedProduct(null)}
+        onUpdate={fetchProducts}
       />
     </div>
   );

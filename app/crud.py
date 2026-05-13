@@ -95,6 +95,16 @@ def create_product(db: Session, product_data: schemas.ProductCreate):
     return db_product
 
 def create_recipe(db: Session, recipe_data: schemas.RecipeCreate):
+    # Check if parent is a finished product
+    parent = db.query(models.Product).filter(models.Product.id == recipe_data.parent_product_id).first()
+    if not parent or parent.type == models.ProductType.POLPRODUKT.value:
+        raise HTTPException(status_code=400, detail="Tylko produkty gotowe mogą posiadać receptury.")
+
+    # Check for self-reference
+    for item in recipe_data.items:
+        if item.component_product_id == recipe_data.parent_product_id:
+            raise HTTPException(status_code=400, detail="Produkt nie może być składnikiem samego siebie.")
+            
     db.query(models.RecipeItem).filter(models.RecipeItem.parent_product_id == recipe_data.parent_product_id).delete()
     
     db_items = []

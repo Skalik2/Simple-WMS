@@ -1,0 +1,50 @@
+<h2>Edycja Receptury</h2>
+<p class="subtitle">Jak powinien wyglądać interfejs dodawania składników w modalu?</p>
+
+<div class="options">
+  <div class="option" data-choice="simple-list" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Prosta lista z wyszukiwarką</h3>
+      <p>Wybierasz produkt z listy rozwijanej (wyszukiwarka), wpisujesz ilość i dodajesz do listy poniżej.</p>
+      <div class="mockup" style="margin-top: 10px;">
+        <div class="mockup-body" style="padding: 10px; font-size: 11px;">
+          <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+            <input class="mock-input" placeholder="Szukaj półproduktu..." style="flex: 2;">
+            <input class="mock-input" placeholder="Ilość" style="flex: 1;">
+            <button class="mock-button">+</button>
+          </div>
+          <div style="border-top: 1px solid #ccc; padding-top: 5px;">
+             • Noga stołowa (4 szt) [x]<br>
+             • Blat dębowy (1 szt) [x]
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="grid-selection" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Szybki wybór (Grid/Tagi)</h3>
+      <p>Widzisz listę wszystkich dostępnych półproduktów i klikasz w te, które chcesz dodać, a następnie edytujesz ilości w tabeli.</p>
+      <div class="mockup" style="margin-top: 10px;">
+        <div class="mockup-body" style="padding: 10px; font-size: 11px;">
+          <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px;">
+             <span style="background: #e0e7ff; padding: 2px 6px; border-radius: 10px; cursor: pointer;">+ Noga</span>
+             <span style="background: #e0e7ff; padding: 2px 6px; border-radius: 10px; cursor: pointer;">+ Blat</span>
+             <span style="background: #e0e7ff; padding: 2px 6px; border-radius: 10px; cursor: pointer;">+ Śruba</span>
+          </div>
+          <table style="width: 100%; border-top: 1px solid #ccc;">
+            <tr><td>Noga</td><td><input value="4" style="width: 30px;"></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Walidacja</h3>
+  <p>Czy system powinien pozwalać na zapętlenie receptur? (np. Produkt A składa się z Produktu B, który składa się z Produktu A). Proponuję prostą blokadę takich przypadków.</p>
+</div>

@@ -1,0 +1,43 @@
+<h2>Nowa funkcjonalność: Przypisywanie receptur</h2>
+<p class="subtitle">Gdzie chciałbyś wywoływać edycję receptury?</p>
+
+<div class="options" data-choice-type="radio">
+  <div class="option" data-choice="modal" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Przycisk w tabeli (Ikona)</h3>
+      <p>Dodatkowa kolumna w tabeli inwentarza z ikoną (np. listą lub kluczem), która otwiera modal edycji receptury dla konkretnego produktu.</p>
+      <div class="mockup" style="margin-top: 10px; transform: scale(0.9); transform-origin: top left;">
+        <div class="mockup-body" style="padding: 10px;">
+          <table style="width: 100%; font-size: 10px;">
+            <tr style="border-bottom: 1px solid #ccc;">
+              <td>[1] STOL-01</td>
+              <td>Stół dębowy</td>
+              <td><button class="mock-button" style="padding: 2px 5px; font-size: 8px;">Receptura</button></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="context-menu" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Po naciśnięciu na wiersz produktu</h3>
+      <p>Kliknięcie w produkt w tabeli otwiera menu kontekstowe lub modal z detalami, gdzie jedną z opcji jest "Edytuj recepturę".</p>
+      <div class="mockup" style="margin-top: 10px; transform: scale(0.9); transform-origin: top left;">
+        <div class="mockup-body" style="padding: 10px; background: #f0f0f0;">
+          <div style="font-weight: bold; border-bottom: 1px solid #ccc; margin-bottom: 5px;">Szczegóły: Stół dębowy</div>
+          <button class="mock-button" style="width: 100%; text-align: left; margin-bottom: 2px;">Edytuj dane</button>
+          <button class="mock-button" style="width: 100%; text-align: left; background: #e0e7ff;">Edytuj recepturę</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Dodatkowo: Modal Edycji</h3>
+  <p>Sam proces przypisywania receptury odbywałby się w nowym modalu, gdzie można dodawać/usuwać składniki (POLPRODUKTY) i określać ich ilość.</p>
+</div>
