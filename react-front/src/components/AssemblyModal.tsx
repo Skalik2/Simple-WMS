@@ -30,16 +30,27 @@ export const AssemblyModal = ({ isOpen, onClose, onAssemblySuccess }: {
   useEffect(() => {
     if (isOpen) {
       fetch('/api/products')
-        .then(res => res.json())
-        .then(data => setProducts(data));
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to fetch products');
+          return res.json();
+        })
+        .then(data => setProducts(data))
+        .catch(err => console.error(err));
     }
   }, [isOpen]);
 
   useEffect(() => {
     if (selectedProductId) {
       fetch(`/api/products/${selectedProductId}/recipe`)
-        .then(res => res.json())
-        .then(data => setRecipe(data));
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to fetch recipe');
+          return res.json();
+        })
+        .then(data => setRecipe(data))
+        .catch(err => {
+          console.error(err);
+          setRecipe([]);
+        });
     } else {
       setRecipe([]);
     }
@@ -66,9 +77,15 @@ export const AssemblyModal = ({ isOpen, onClose, onAssemblySuccess }: {
       }
     } catch (err) {
       console.error(err);
+      alert("Wystąpił błąd połączenia.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const getComponentStock = (id: number) => {
+    const product = products.find(p => p.id === id);
+    return product ? product.stock_quantity : 0;
   };
 
   return (
@@ -101,16 +118,35 @@ export const AssemblyModal = ({ isOpen, onClose, onAssemblySuccess }: {
           />
         </div>
 
+        {selectedProductId && recipe.length === 0 && (
+          <div className="p-4 bg-error-container text-on-error-container rounded-xl text-xs">
+            Ten produkt nie posiada zdefiniowanej receptury i nie może zostać złożony.
+          </div>
+        )}
+
         {recipe.length > 0 && (
           <div className="p-4 bg-surface-container-high rounded-xl space-y-2">
             <h4 className="text-xs font-bold text-on-surface uppercase tracking-wider">Potrzebne półprodukty:</h4>
-            <ul className="text-xs space-y-1">
-              {recipe.map(item => (
-                <li key={item.component_product_id} className="flex justify-between">
-                  <span>{item.name}</span>
-                  <span className="font-bold">{item.quantity * quantity} szt.</span>
-                </li>
-              ))}
+            <ul className="text-xs space-y-2">
+              {recipe.map(item => {
+                const stock = getComponentStock(item.component_product_id);
+                const needed = item.quantity * quantity;
+                const hasEnough = stock >= needed;
+                
+                return (
+                  <li key={item.component_product_id} className="flex justify-between items-center">
+                    <div className="flex flex-col">
+                      <span>{item.name}</span>
+                      <span className={`text-[10px] ${hasEnough ? 'text-on-surface-variant' : 'text-error font-bold'}`}>
+                        Stan: {stock} / Potrzebne: {needed}
+                      </span>
+                    </div>
+                    <span className={`font-bold ${hasEnough ? 'text-primary' : 'text-error'}`}>
+                      {needed} szt.
+                    </span>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}
@@ -119,7 +155,7 @@ export const AssemblyModal = ({ isOpen, onClose, onAssemblySuccess }: {
           <button type="button" onClick={onClose} className="flex-1 px-4 py-2 bg-surface-container-high text-on-surface font-bold rounded-xl text-sm">Anuluj</button>
           <button 
             type="submit" 
-            disabled={loading || !selectedProductId}
+            disabled={loading || !selectedProductId || recipe.length === 0}
             className="flex-1 px-4 py-2 bg-primary text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {loading ? "Składanie..." : <><Check size={16} /> Złóż produkt</>}
