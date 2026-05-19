@@ -29,12 +29,12 @@ export const AssemblyModal = ({ isOpen, onClose, onAssemblySuccess }: {
 
   useEffect(() => {
     if (isOpen) {
-      fetch('/api/products')
+      fetch('/api/products?page_size=1000')
         .then(res => {
           if (!res.ok) throw new Error('Failed to fetch products');
           return res.json();
         })
-        .then(data => setProducts(data))
+        .then(data => setProducts(data.items || []))
         .catch(err => console.error(err));
     }
   }, [isOpen]);

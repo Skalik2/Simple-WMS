@@ -7,12 +7,13 @@ interface NewDocumentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  initialType?: 'PZ' | 'WZ' | 'ZW' | 'RW';
 }
 
-export const NewDocumentModal = ({ isOpen, onClose, onSuccess }: NewDocumentModalProps) => {
+export const NewDocumentModal = ({ isOpen, onClose, onSuccess, initialType = 'PZ' }: NewDocumentModalProps) => {
   const { getToken } = useAuth();
   
-  const [type, setType] = useState<'PZ' | 'WZ' | 'ZW' | 'RW'>('PZ');
+  const [type, setType] = useState<'PZ' | 'WZ' | 'ZW' | 'RW'>(initialType);
   const [contractorId, setContractorId] = useState('');
   const [items, setItems] = useState([{ product_id: '', quantity: 1 }]);
   
@@ -21,10 +22,13 @@ export const NewDocumentModal = ({ isOpen, onClose, onSuccess }: NewDocumentModa
 
   useEffect(() => {
     if (isOpen) {
-      fetch('/api/products').then(res => res.json()).then(setAvailableProducts);
-      fetch('/api/contractors').then(res => res.json()).then(setAvailableContractors);
+      setType(initialType);
+      // Fetch products (first 1000 for dropdown)
+      fetch('/api/products?page_size=1000').then(res => res.json()).then(data => setAvailableProducts(data.items || []));
+      // Fetch contractors (first 1000 for dropdown)
+      fetch('/api/contractors?page_size=1000').then(res => res.json()).then(data => setAvailableContractors(data.items || []));
     }
-  }, [isOpen]);
+  }, [isOpen, initialType]);
 
   const addItem = () => setItems([...items, { product_id: '', quantity: 1 }]);
   const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));

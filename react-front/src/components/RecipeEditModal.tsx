@@ -12,11 +12,12 @@ export const RecipeEditModal = ({ isOpen, onClose, product, currentRecipe, onSav
   useEffect(() => {
     if (isOpen) {
       setItems(currentRecipe.map((r: any) => ({ ...r })));
-      fetch('/api/products')
+      fetch('/api/products?page_size=1000')
         .then(res => res.json())
         .then(data => {
           // Filter out current product and non-semi-finished products
-          setAllProducts(data.filter((p: any) => p.id !== product.id));
+          const products = data.items || [];
+          setAllProducts(products.filter((p: any) => p.id !== product.id));
         })
         .catch(err => console.error(err));
     }

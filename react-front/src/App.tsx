@@ -72,7 +72,7 @@ export default function App() {
                 className={`overflow-hidden whitespace-nowrap transition-all duration-300 ${isSidebarOpen ? 'w-auto opacity-100' : 'w-0 opacity-0 lg:hidden'}`}
               >
                 <h1 className="font-bold text-lg text-primary">Simple WMS</h1>
-                <p className="text-xs text-on-surface-variant font-medium tracking-tight">Global Logistics</p>
+                <p className="text-xs text-on-surface-variant font-medium tracking-tight">Warehouse system</p>
               </div>
             )}
           </div>
@@ -154,7 +154,8 @@ export default function App() {
       <NewDocumentModal 
         isOpen={isModalOpen} 
         onClose={() => setModalOpen(false)} 
-        initialType={selectedDocType} 
+        onSuccess={() => setModalOpen(false)}
+        initialType={selectedDocType as any} 
       />
     </div>
   );

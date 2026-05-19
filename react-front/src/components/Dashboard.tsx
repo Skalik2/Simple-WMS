@@ -16,16 +16,20 @@ export const Dashboard = ({ onActionClick }: DashboardProps) => {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   useEffect(() => {
-    fetch('/api/documents')
+    fetch('/api/documents?page_size=5')
       .then(res => res.json())
-      .then(data => setRecentDocs(data.slice(0, 5)));
+      .then(data => setRecentDocs(data.items || []));
 
     Promise.all([
-      fetch('/api/products').then(res => res.json()),
-      fetch('/api/contractors').then(res => res.json()),
-      fetch('/api/documents').then(res => res.json())
+      fetch('/api/products?page_size=1').then(res => res.json()),
+      fetch('/api/contractors?page_size=1').then(res => res.json()),
+      fetch('/api/documents?page_size=1').then(res => res.json())
     ]).then(([p, c, d]) => {
-      setStats({ products: p.length, contractors: c.length, documents: d.length });
+      setStats({ 
+        products: p.total || 0, 
+        contractors: c.total || 0, 
+        documents: d.total || 0 
+      });
     });
   }, []);
 
