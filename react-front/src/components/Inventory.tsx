@@ -4,6 +4,7 @@ import { Box, MapPin, Package, Plus, Check, Settings2 } from 'lucide-react';
 import { Modal } from './ui/Modal';
 import { AssemblyModal } from './AssemblyModal';
 import { ProductDetailsModal } from './ProductDetailsModal';
+import { Pagination } from './ui/Pagination';
 
 // Typ określający budowę produktu z API
 interface Product {
@@ -17,17 +18,23 @@ interface Product {
 
 export const Inventory = () => {
   const [items, setItems] = useState<Product[]>([]);
+  const [totalItems, setTotalItems] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAssemblyModalOpen, setIsAssemblyModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   // Pobieranie produktów z API
-  const fetchProducts = async () => {
+  const fetchProducts = async (page: number = 1) => {
     try {
-      const res = await fetch('/api/products');
+      const res = await fetch(`/api/products?page=${page}&page_size=${pageSize}`);
       if (res.ok) {
         const data = await res.json();
-        setItems(data);
+        setItems(data.items);
+        setTotalItems(data.total);
+        setCurrentPage(data.page);
       }
     } catch (err) {
       console.error('Błąd podczas pobierania produktów:', err);
@@ -35,8 +42,8 @@ export const Inventory = () => {
   };
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    fetchProducts(currentPage);
+  }, [currentPage]);
 
   // Wysyłanie nowego produktu do API
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -135,6 +142,12 @@ export const Inventory = () => {
             </tbody>
           </table>
         </div>
+        <Pagination
+          currentPage={currentPage}
+          totalItems={totalItems}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       {/* Modal dodawania */}
