@@ -13,6 +13,8 @@ interface Contractor {
 export const Contractors = () => {
   const [contractors, setContractors] = useState<Contractor[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingContractor, setEditingContractor] = useState<Contractor | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [totalItems, setTotalItems] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -40,26 +42,31 @@ export const Contractors = () => {
     fetchContractors(currentPage);
   }, [currentPage]);
 
-  // Obsługa dodawania nowego kontrahenta
+  // Obsługa dodawania/edycji kontrahenta
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
+    const data = {
+      name: formData.get('name'),
+      nip: formData.get('nip') || null,
+    };
     
+    const url = editingContractor ? `/api/contractors/${editingContractor.id}` : '/api/contractors';
+    const method = editingContractor ? 'PUT' : 'POST';
+
     try {
-      const res = await fetch('/api/contractors', {
-        method: 'POST',
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.get('name'),
-          nip: formData.get('nip') || null,
-        })
+        body: JSON.stringify(data)
       });
 
       if (res.ok) {
         await fetchContractors(currentPage);
         setIsModalOpen(false);
+        setEditingContractor(null);
       } else {
-        alert("Błąd podczas dodawania kontrahenta.");
+        alert("Błąd podczas zapisywania kontrahenta.");
       }
     } catch (err) {
       console.error(err);
@@ -98,9 +105,28 @@ export const Contractors = () => {
                 <div className="p-3 bg-secondary-container text-on-secondary-container rounded-xl">
                   <Building2 size={24} />
                 </div>
-                <button className="text-on-surface-variant hover:text-on-surface p-1">
-                  <MoreVertical size={20} />
-                </button>
+                <div className="relative">
+                  <button 
+                    onClick={() => setOpenMenuId(openMenuId === contractor.id ? null : contractor.id)}
+                    className="text-on-surface-variant hover:text-on-surface p-1"
+                  >
+                    <MoreVertical size={20} />
+                  </button>
+                  {openMenuId === contractor.id && (
+                    <div className="absolute right-0 mt-2 w-32 bg-surface-container-high border border-outline-variant rounded-xl shadow-lg z-10 py-1">
+                      <button 
+                        onClick={() => {
+                          setEditingContractor(contractor);
+                          setIsModalOpen(true);
+                          setOpenMenuId(null);
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-container-highest transition-colors"
+                      >
+                        Edytuj
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
               
               <h3 className="font-bold text-lg text-on-surface mb-1 group-hover:text-primary transition-colors">
@@ -129,19 +155,23 @@ export const Contractors = () => {
         </div>
       )}
 
-      {/* Modal dodawania */}
+      {/* Modal dodawania/edycji */}
       <Modal 
         isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        title="Nowy kontrahent"
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingContractor(null);
+        }} 
+        title={editingContractor ? "Edytuj kontrahenta" : "Nowy kontrahent"}
       >
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" key={editingContractor?.id || 'new'}>
           <div className="space-y-1">
             <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Nazwa firmy</label>
             <input 
               name="name" 
               type="text" 
               required 
+              defaultValue={editingContractor?.name || ''}
               placeholder="np. Logistyka Polska Sp. z o.o." 
               className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-sm focus:ring-2 focus:ring-primary/20" 
             />
@@ -151,12 +181,22 @@ export const Contractors = () => {
             <input 
               name="nip" 
               type="text" 
+              defaultValue={editingContractor?.nip || ''}
               placeholder="1234567890" 
               className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-sm focus:ring-2 focus:ring-primary/20" 
             />
           </div>
           <div className="pt-4 flex gap-3">
-            <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 px-4 py-2 bg-surface-container-high text-on-surface font-bold rounded-xl text-sm">Anuluj</button>
+            <button 
+              type="button" 
+              onClick={() => {
+                setIsModalOpen(false);
+                setEditingContractor(null);
+              }} 
+              className="flex-1 px-4 py-2 bg-surface-container-high text-on-surface font-bold rounded-xl text-sm"
+            >
+              Anuluj
+            </button>
             <button type="submit" className="flex-1 px-4 py-2 bg-primary text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2">
               <Check size={16} /> Zapisz
             </button>
