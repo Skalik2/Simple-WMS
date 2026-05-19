@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Users, Plus, Search, Building2, CreditCard, MoreVertical, Check } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Modal } from './ui/Modal';
+import { Pagination } from './ui/Pagination';
 
 interface Contractor {
   id: number;
@@ -13,15 +14,20 @@ export const Contractors = () => {
   const [contractors, setContractors] = useState<Contractor[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [totalItems, setTotalItems] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
 
   // Pobieranie kontrahentów
-  const fetchContractors = async () => {
+  const fetchContractors = async (page: number = 1) => {
     setLoading(true);
     try {
-      const res = await fetch('/api/contractors');
+      const res = await fetch(`/api/contractors?page=${page}&page_size=${pageSize}`);
       if (res.ok) {
         const data = await res.json();
-        setContractors(data);
+        setContractors(data.items);
+        setTotalItems(data.total);
+        setCurrentPage(data.page);
       }
     } catch (err) {
       console.error('Błąd pobierania kontrahentów:', err);
@@ -31,8 +37,8 @@ export const Contractors = () => {
   };
 
   useEffect(() => {
-    fetchContractors();
-  }, []);
+    fetchContractors(currentPage);
+  }, [currentPage]);
 
   // Obsługa dodawania nowego kontrahenta
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -50,7 +56,7 @@ export const Contractors = () => {
       });
 
       if (res.ok) {
-        await fetchContractors();
+        await fetchContractors(currentPage);
         setIsModalOpen(false);
       } else {
         alert("Błąd podczas dodawania kontrahenta.");
@@ -109,6 +115,17 @@ export const Contractors = () => {
               </div>
             </motion.div>
           ))}
+        </div>
+      )}
+
+      {!loading && totalItems > pageSize && (
+        <div className="mt-8">
+          <Pagination
+            currentPage={currentPage}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+          />
         </div>
       )}
 
