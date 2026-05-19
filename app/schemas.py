@@ -66,6 +66,10 @@ class ContractorCreate(BaseModel):
     name: str
     nip: str | None = None
 
+class ContractorUpdate(BaseModel):
+    name: str
+    nip: str | None = None
+
 class RecipeItemCreate(BaseModel):
     component_product_id: int
     quantity: int
