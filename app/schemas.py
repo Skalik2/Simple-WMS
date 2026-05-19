@@ -1,7 +1,18 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import List
+from typing import List, Generic, TypeVar
 from .models import DocType, ProductType
+
+T = TypeVar("T")
+
+class PageResponse(BaseModel, Generic[T]):
+    items: List[T]
+    total: int
+    page: int
+    page_size: int
+
+    class Config:
+        from_attributes = True
 
 class ContractorResponse(BaseModel):
     id: int
