@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from typing import List, Generic, TypeVar
 from .models import DocType, ProductType
@@ -11,16 +11,14 @@ class PageResponse(BaseModel, Generic[T]):
     page: int
     page_size: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ContractorResponse(BaseModel):
     id: int
     name: str
     nip: str | None = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ProductCreate(BaseModel):
     sku: str
@@ -45,16 +43,14 @@ class ProductResponse(BaseModel):
     unit: str
     stock_quantity: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class DocumentItemResponse(BaseModel):
     product_id: int
     quantity: int
     product: ProductResponse
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class DocumentResponse(BaseModel):
     id: int
@@ -64,8 +60,7 @@ class DocumentResponse(BaseModel):
     contractor_name: str | None = None
     items: List[DocumentItemResponse] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ContractorCreate(BaseModel):
     name: str

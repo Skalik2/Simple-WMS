@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List
 from ..dependencies import get_db, get_current_user_id
@@ -25,13 +25,35 @@ async def create_document(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Wewnętrzny błąd serwera: {str(e)}")
     
-@router.get("/products", response_model=List[schemas.ProductResponse])
-async def read_products(db: Session = Depends(get_db)):
-    return crud.get_products(db)
+@router.get("/products", response_model=schemas.PageResponse[schemas.ProductResponse])
+async def read_products(
+    page: int = Query(1, ge=1), 
+    page_size: int = Query(10, ge=1, le=100), 
+    db: Session = Depends(get_db)
+):
+    skip = (page - 1) * page_size
+    items, total = crud.get_products(db, skip=skip, limit=page_size)
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "page_size": page_size
+    }
 
-@router.get("/documents", response_model=List[schemas.DocumentResponse])
-async def read_documents(db: Session = Depends(get_db)):
-    return crud.get_documents(db)
+@router.get("/documents", response_model=schemas.PageResponse[schemas.DocumentResponse])
+async def read_documents(
+    page: int = Query(1, ge=1), 
+    page_size: int = Query(10, ge=1, le=100), 
+    db: Session = Depends(get_db)
+):
+    skip = (page - 1) * page_size
+    items, total = crud.get_documents(db, skip=skip, limit=page_size)
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "page_size": page_size
+    }
 
 @router.post("/products", response_model=schemas.ProductResponse)
 async def create_new_product(product: schemas.ProductCreate, db: Session = Depends(get_db)):
@@ -72,9 +94,20 @@ async def assemble_product(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/contractors", response_model=List[schemas.ContractorResponse])
-async def read_contractors(db: Session = Depends(get_db)):
-    return crud.get_contractors(db)
+@router.get("/contractors", response_model=schemas.PageResponse[schemas.ContractorResponse])
+async def read_contractors(
+    page: int = Query(1, ge=1), 
+    page_size: int = Query(10, ge=1, le=100), 
+    db: Session = Depends(get_db)
+):
+    skip = (page - 1) * page_size
+    items, total = crud.get_contractors(db, skip=skip, limit=page_size)
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "page_size": page_size
+    }
 
 @router.post("/contractors", response_model=schemas.ContractorResponse)
 async def create_new_contractor(contractor: schemas.ContractorCreate, db: Session = Depends(get_db)):

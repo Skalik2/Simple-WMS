@@ -5,3 +5,4 @@
 /app/routers/__pycache__/*
 /dev-scripts/__pycache__/*
 react-front/node_modules/
+tests/__pycache__/*
