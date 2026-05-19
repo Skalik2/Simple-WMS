@@ -28,7 +28,7 @@ async def create_document(
 @router.get("/products", response_model=schemas.PageResponse[schemas.ProductResponse])
 async def read_products(
     page: int = Query(1, ge=1), 
-    page_size: int = Query(10, ge=1, le=100), 
+    page_size: int = Query(10, ge=1, le=1000), 
     db: Session = Depends(get_db)
 ):
     skip = (page - 1) * page_size
@@ -43,7 +43,7 @@ async def read_products(
 @router.get("/documents", response_model=schemas.PageResponse[schemas.DocumentResponse])
 async def read_documents(
     page: int = Query(1, ge=1), 
-    page_size: int = Query(10, ge=1, le=100), 
+    page_size: int = Query(10, ge=1, le=1000), 
     db: Session = Depends(get_db)
 ):
     skip = (page - 1) * page_size
@@ -97,7 +97,7 @@ async def assemble_product(
 @router.get("/contractors", response_model=schemas.PageResponse[schemas.ContractorResponse])
 async def read_contractors(
     page: int = Query(1, ge=1), 
-    page_size: int = Query(10, ge=1, le=100), 
+    page_size: int = Query(10, ge=1, le=1000), 
     db: Session = Depends(get_db)
 ):
     skip = (page - 1) * page_size

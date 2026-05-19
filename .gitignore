@@ -6,3 +6,4 @@
 /dev-scripts/__pycache__/*
 react-front/node_modules/
 tests/__pycache__/*
+react-front/dist
