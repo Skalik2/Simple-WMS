@@ -3,6 +3,7 @@ import { FileText, Plus, ArrowUpRight, ArrowDownLeft, Calendar, User } from 'luc
 import { motion } from 'motion/react';
 import { NewDocumentModal } from './NewDocumentModal';
 import { DocumentDetailsModal } from './DocumentDetailsModal';
+import { Pagination } from './ui/Pagination';
 import { Document } from '../types';
 
 export const Documents = () => {
@@ -11,14 +12,19 @@ export const Documents = () => {
   const [loading, setLoading] = useState(true);
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [totalItems, setTotalItems] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
 
-  const fetchDocuments = async () => {
+  const fetchDocuments = async (page: number = 1) => {
     setLoading(true);
     try {
-      const res = await fetch('/api/documents');
+      const res = await fetch(`/api/documents?page=${page}&page_size=${pageSize}`);
       if (res.ok) {
         const data = await res.json();
-        setDocuments(data);
+        setDocuments(data.items);
+        setTotalItems(data.total);
+        setCurrentPage(data.page);
       }
     } catch (err) {
       console.error('Błąd pobierania dokumentów:', err);
@@ -28,8 +34,8 @@ export const Documents = () => {
   };
 
   useEffect(() => {
-    fetchDocuments();
-  }, []);
+    fetchDocuments(currentPage);
+  }, [currentPage]);
 
   const handleDocClick = (doc: Document) => {
     setSelectedDoc(doc);
@@ -109,10 +115,17 @@ export const Documents = () => {
         )}
       </div>
 
+      <Pagination
+        currentPage={currentPage}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+      />
+
       <NewDocumentModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
-        onSuccess={fetchDocuments}
+        onSuccess={() => fetchDocuments(currentPage)}
       />
 
       <DocumentDetailsModal 
