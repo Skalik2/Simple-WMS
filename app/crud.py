@@ -2,8 +2,11 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from . import models, schemas
 
-def get_contractors(db: Session):
-    return db.query(models.Contractor).order_by(models.Contractor.name).all()
+def get_contractors(db: Session, skip: int = 0, limit: int = 10) -> tuple[list[models.Contractor], int]:
+    query = db.query(models.Contractor).order_by(models.Contractor.name)
+    total = query.count()
+    items = query.offset(skip).limit(limit).all()
+    return items, total
 
 def create_contractor(db: Session, contractor_data: schemas.ContractorCreate):
     db_contractor = models.Contractor(
@@ -75,11 +78,17 @@ def create_document(db: Session, doc_data: schemas.DocumentCreate, user_id: str)
     
     return db_document
 
-def get_products(db: Session):
-    return db.query(models.Product).order_by(models.Product.id).all()
+def get_products(db: Session, skip: int = 0, limit: int = 10) -> tuple[list[models.Product], int]:
+    query = db.query(models.Product).order_by(models.Product.id)
+    total = query.count()
+    items = query.offset(skip).limit(limit).all()
+    return items, total
 
-def get_documents(db: Session):
-    return db.query(models.Document).order_by(models.Document.created_at.desc()).all()
+def get_documents(db: Session, skip: int = 0, limit: int = 10) -> tuple[list[models.Document], int]:
+    query = db.query(models.Document).order_by(models.Document.created_at.desc())
+    total = query.count()
+    items = query.offset(skip).limit(limit).all()
+    return items, total
 
 def create_product(db: Session, product_data: schemas.ProductCreate):
     db_product = models.Product(
