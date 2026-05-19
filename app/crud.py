@@ -18,6 +18,16 @@ def create_contractor(db: Session, contractor_data: schemas.ContractorCreate):
     db.refresh(db_contractor)
     return db_contractor
 
+def update_contractor(db: Session, contractor_id: int, data: schemas.ContractorUpdate) -> models.Contractor | None:
+    db_contractor = db.query(models.Contractor).filter(models.Contractor.id == contractor_id).first()
+    if not db_contractor:
+        return None
+    db_contractor.name = data.name
+    db_contractor.nip = data.nip
+    db.commit()
+    db.refresh(db_contractor)
+    return db_contractor
+
 def create_document(db: Session, doc_data: schemas.DocumentCreate, user_id: str):
     db_document = models.Document(
         type=doc_data.type,
