@@ -16,25 +16,34 @@ export const Documents = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
-  const fetchDocuments = async (page: number = 1) => {
+  const fetchDocuments = async (page: number = 1, isCancelled: () => boolean = () => false) => {
     setLoading(true);
     try {
       const res = await fetch(`/api/documents?page=${page}&page_size=${pageSize}`);
       if (res.ok) {
         const data = await res.json();
+        if (isCancelled()) return;
         setDocuments(data.items);
         setTotalItems(data.total);
         setCurrentPage(data.page);
       }
     } catch (err) {
-      console.error('Błąd pobierania dokumentów:', err);
+      if (!isCancelled()) {
+        console.error('Błąd pobierania dokumentów:', err);
+      }
     } finally {
-      setLoading(false);
+      if (!isCancelled()) {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
-    fetchDocuments(currentPage);
+    let cancelled = false;
+    fetchDocuments(currentPage, () => cancelled);
+    return () => {
+      cancelled = true;
+    };
   }, [currentPage]);
 
   const handleDocClick = (doc: Document) => {
@@ -125,7 +134,7 @@ export const Documents = () => {
       <NewDocumentModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
-        onSuccess={() => fetchDocuments(currentPage)}
+        onSuccess={() => fetchDocuments(currentPage, () => false)}
       />
 
       <DocumentDetailsModal 
