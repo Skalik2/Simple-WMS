@@ -112,3 +112,10 @@ async def read_contractors(
 @router.post("/contractors", response_model=schemas.ContractorResponse)
 async def create_new_contractor(contractor: schemas.ContractorCreate, db: Session = Depends(get_db)):
     return crud.create_contractor(db=db, contractor_data=contractor)
+
+@router.put("/contractors/{contractor_id}", response_model=schemas.ContractorResponse)
+async def update_contractor(contractor_id: int, data: schemas.ContractorUpdate, db: Session = Depends(get_db)):
+    contractor = crud.update_contractor(db, contractor_id, data)
+    if not contractor:
+        raise HTTPException(status_code=404, detail="Kontrahent nie istnieje")
+    return contractor
