@@ -20,6 +20,7 @@ export const Inventory = () => {
   const [items, setItems] = useState<Product[]>([]);
   const [totalItems, setTotalItems] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(false);
   const pageSize = 10;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -27,22 +28,31 @@ export const Inventory = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   // Pobieranie produktów z API
-  const fetchProducts = async (page: number = 1) => {
+  const fetchProducts = async (page: number = 1, isCancelled: () => boolean = () => false) => {
+    setLoading(true);
     try {
       const res = await fetch(`/api/products?page=${page}&page_size=${pageSize}`);
       if (res.ok) {
         const data = await res.json();
-        setItems(data.items);
-        setTotalItems(data.total);
-        setCurrentPage(data.page);
+        if (!isCancelled()) {
+          setItems(data.items);
+          setTotalItems(data.total);
+          setCurrentPage(data.page);
+        }
       }
     } catch (err) {
-      console.error('Błąd podczas pobierania produktów:', err);
+      if (!isCancelled()) console.error('Błąd podczas pobierania produktów:', err);
+    } finally {
+      if (!isCancelled()) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchProducts(currentPage);
+    let cancelled = false;
+    fetchProducts(currentPage, () => cancelled);
+    return () => {
+      cancelled = true;
+    };
   }, [currentPage]);
 
   // Wysyłanie nowego produktu do API
@@ -65,7 +75,11 @@ export const Inventory = () => {
       });
 
       if (res.ok) {
-        await fetchProducts(); // Odśwież listę po dodaniu
+        if (currentPage === 1) {
+          await fetchProducts(1);
+        } else {
+          setCurrentPage(1);
+        }
         setIsModalOpen(false);
       } else {
         alert("Błąd podczas zapisywania produktu.");
@@ -115,7 +129,14 @@ export const Inventory = () => {
                 <th className="px-6 py-4">Typ</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-surface-container-high transition-all">
+            <tbody className="divide-y divide-surface-container-high transition-all relative min-h-[200px]">
+              {loading && (
+                <tr className="absolute inset-0 bg-surface-bright/50 backdrop-blur-[1px] flex items-center justify-center z-10 w-full h-full">
+                  <td className="border-none flex items-center justify-center w-full">
+                    <div className="text-primary font-bold animate-pulse">Ładowanie...</div>
+                  </td>
+                </tr>
+              )}
               {items.map((item, idx) => (
                 <motion.tr 
                   key={item.id}
