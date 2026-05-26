@@ -81,3 +81,17 @@ class RecipeCreate(BaseModel):
 class ProductAssembly(BaseModel):
     product_id: int
     quantity: int
+
+class ReportChartData(BaseModel):
+    name: str
+    pz: int
+    wz: int
+
+class ReportCards(BaseModel):
+    total_ops: int
+    top_product: str
+    total_stock: int
+
+class ReportResponse(BaseModel):
+    chart_data: List[ReportChartData]
+    cards: ReportCards
