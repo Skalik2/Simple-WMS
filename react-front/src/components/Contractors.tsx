@@ -18,28 +18,35 @@ export const Contractors = () => {
   const [loading, setLoading] = useState(true);
   const [totalItems, setTotalItems] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 10;
+  const pageSize = 9;
 
   // Pobieranie kontrahentów
-  const fetchContractors = async (page: number = 1) => {
+  const fetchContractors = async (page: number = 1, isCancelled?: () => boolean) => {
     setLoading(true);
     try {
       const res = await fetch(`/api/contractors?page=${page}&page_size=${pageSize}`);
       if (res.ok) {
         const data = await res.json();
+        if (isCancelled && isCancelled()) return;
         setContractors(data.items);
         setTotalItems(data.total);
         setCurrentPage(data.page);
       }
     } catch (err) {
+      if (isCancelled && isCancelled()) return;
       console.error('Błąd pobierania kontrahentów:', err);
     } finally {
+      if (isCancelled && isCancelled()) return;
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchContractors(currentPage);
+    let cancelled = false;
+    fetchContractors(currentPage, () => cancelled);
+    return () => {
+      cancelled = true;
+    };
   }, [currentPage]);
 
   // Obsługa dodawania/edycji kontrahenta
