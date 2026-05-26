@@ -129,3 +129,9 @@ async def delete_contractor(contractor_id: int, db: Session = Depends(get_db)):
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/reports/stats", response_model=schemas.ReportResponse)
+async def read_report_stats(range: str = Query("7d"), db: Session = Depends(get_db)):
+    if range not in ["7d", "30d", "1y"]:
+        raise HTTPException(status_code=400, detail="Nieprawidłowy zakres")
+    return crud.get_report_stats(db, date_range=range)
