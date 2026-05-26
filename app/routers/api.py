@@ -119,3 +119,13 @@ async def update_contractor(contractor_id: int, data: schemas.ContractorUpdate, 
     if not contractor:
         raise HTTPException(status_code=404, detail="Kontrahent nie istnieje")
     return contractor
+
+@router.delete("/contractors/{contractor_id}")
+async def delete_contractor(contractor_id: int, db: Session = Depends(get_db)):
+    try:
+        crud.delete_contractor(db, contractor_id)
+        return {"message": "Kontrahent usunięty pomyślnie"}
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
