@@ -17,7 +17,33 @@ export const Pagination: React.FC<PaginationProps> = ({
   const totalPages = Math.ceil(totalItems / pageSize);
   if (totalPages <= 1) return null;
 
-  const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+  const getVisiblePages = () => {
+    const delta = 2;
+    const range = [];
+    const rangeWithDots: (number | string)[] = [];
+    let l: number | undefined;
+
+    range.push(1);
+    for (let i = currentPage - delta; i <= currentPage + delta; i++) {
+      if (i < totalPages && i > 1) {
+        range.push(i);
+      }
+    }
+    if (totalPages > 1 && !range.includes(totalPages)) range.push(totalPages);
+
+    for (let i of range) {
+      if (l !== undefined) {
+        if (i - l === 2) {
+          rangeWithDots.push(l + 1);
+        } else if (i - l !== 1) {
+          rangeWithDots.push('...');
+        }
+      }
+      rangeWithDots.push(i);
+      l = i;
+    }
+    return rangeWithDots;
+  };
 
   return (
     <div className="flex items-center justify-between px-4 py-3 sm:px-6 mt-4 bg-surface-container-lowest rounded-xl border border-outline-variant">
@@ -55,19 +81,31 @@ export const Pagination: React.FC<PaginationProps> = ({
               <span className="sr-only">Poprzednia</span>
               <ChevronLeft className="h-5 w-5" aria-hidden="true" />
             </button>
-            {pages.map(page => (
-              <button
-                key={page}
-                onClick={() => onPageChange(page)}
-                className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
-                  page === currentPage
-                    ? 'z-10 bg-primary text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
-                    : 'text-on-surface ring-1 ring-inset ring-outline-variant hover:bg-surface-bright focus:z-20 focus:outline-offset-0'
-                }`}
-              >
-                {page}
-              </button>
-            ))}
+            {getVisiblePages().map((page, index) => {
+              if (page === '...') {
+                return (
+                  <span
+                    key={`ellipsis-${index}`}
+                    className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-on-surface ring-1 ring-inset ring-outline-variant"
+                  >
+                    ...
+                  </span>
+                );
+              }
+              return (
+                <button
+                  key={page}
+                  onClick={() => onPageChange(page as number)}
+                  className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
+                    page === currentPage
+                      ? 'z-10 bg-primary text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
+                      : 'text-on-surface ring-1 ring-inset ring-outline-variant hover:bg-surface-bright focus:z-20 focus:outline-offset-0'
+                  }`}
+                >
+                  {page}
+                </button>
+              );
+            })}
             <button
               onClick={() => onPageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
