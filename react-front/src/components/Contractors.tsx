@@ -80,6 +80,29 @@ export const Contractors = () => {
     }
   };
 
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("Czy na pewno chcesz usunąć tego kontrahenta? Tej operacji nie można cofnąć.")) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/contractors/${id}`, {
+        method: 'DELETE'
+      });
+
+      if (res.ok) {
+        await fetchContractors(currentPage);
+        setOpenMenuId(null);
+      } else {
+        const data = await res.json();
+        alert(data.detail || "Błąd podczas usuwania kontrahenta.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Wystąpił błąd sieciowy.");
+    }
+  };
+
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto w-full">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
@@ -130,6 +153,12 @@ export const Contractors = () => {
                         className="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-container-highest transition-colors"
                       >
                         Edytuj
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(contractor.id)}
+                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-600/10 transition-colors"
+                      >
+                        Usuń
                       </button>
                     </div>
                   )}
