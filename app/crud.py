@@ -28,6 +28,23 @@ def update_contractor(db: Session, contractor_id: int, data: schemas.ContractorU
     db.refresh(db_contractor)
     return db_contractor
 
+def delete_contractor(db: Session, contractor_id: int):
+    contractor = db.query(models.Contractor).filter(models.Contractor.id == contractor_id).first()
+    if not contractor:
+        raise HTTPException(status_code=404, detail="Kontrahent nie istnieje")
+    
+    # Check for linked documents
+    doc_count = db.query(models.Document).filter(models.Document.contractor_id == contractor_id).count()
+    if doc_count > 0:
+        raise HTTPException(
+            status_code=400, 
+            detail="Nie można usunąć kontrahenta, ponieważ posiada on przypisane dokumenty."
+        )
+    
+    db.delete(contractor)
+    db.commit()
+    return True
+
 def create_document(db: Session, doc_data: schemas.DocumentCreate, user_id: str):
     db_document = models.Document(
         type=doc_data.type,
