@@ -3,12 +3,7 @@ import { Users, Plus, Search, Building2, CreditCard, MoreVertical, Check } from 
 import { motion } from 'motion/react';
 import { Modal } from './ui/Modal';
 import { Pagination } from './ui/Pagination';
-
-interface Contractor {
-  id: number;
-  name: string;
-  nip: string | null;
-}
+import { Contractor } from '../types';
 
 export const Contractors = () => {
   const [contractors, setContractors] = useState<Contractor[]>([]);

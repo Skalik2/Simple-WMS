@@ -1,142 +1,124 @@
 from app.database import SessionLocal
-from app.models import Product, Contractor, Document, DocumentItem, DocType, RecipeItem, ProductType
-from datetime import datetime, timezone
+from app.models import Product, Contractor, Document, DocumentItem, DocType, ProductType, RecipeItem
+from datetime import datetime, timedelta, timezone
 import random
 
 def seed_db():
     db = SessionLocal()
     try:
-        # 1. Kontrahenci
-        if db.query(Contractor).count() == 0:
-            contractors_data = [
-                ("Logistyka Plus Sp. z o.o.", "5210001234"),
-                ("Hurtownia Tech-Spec", "7770005566"),
-                ("Ełka Trans S.A.", "9812345678"),
-                ("Omega-System", "3627481920"),
-                ("Skład IT J. Kowalski", "679112233"),
-                ("Digital House s.c.", "5862374812"),
-                ("OptiMarket Sp. j.", "7541938462"),
-                ("Firma Handlowa Multi-Tech", "8362547291"),
-                ("Technika Jądrowa S.A.", "2891037465"),
-                ("Serwis24 Sp. z o.o.", "4251893674"),
-            ]
-            contractors = [
-                Contractor(name=name, nip=nip)
-                for name, nip in contractors_data
-            ]
-            db.add_all(contractors)
-            db.commit()
-            print("Dodano 10 kontrahentów.")
+        # Clear existing data for fresh seed if requested
+        db.query(RecipeItem).delete()
+        db.query(DocumentItem).delete()
+        db.query(Document).delete()
+        db.query(Product).delete()
+        db.query(Contractor).delete()
+        db.commit()
+        
+        # 1. Ensure we have contractors
+        contractors_data = [
+            ("Logistyka Plus Sp. z o.o.", "5210001234"),
+            ("Hurtownia Tech-Spec", "7770005566"),
+            ("Ełka Trans S.A.", "9812345678"),
+            ("Omega-System", "3627481920"),
+            ("Skład IT J. Kowalski", "679112233"),
+        ]
+        contractors = [Contractor(name=name, nip=nip) for name, nip in contractors_data]
+        db.add_all(contractors)
+        db.commit()
+        contractors = db.query(Contractor).all()
 
-        # 2. Produkty standardowe
-        if db.query(Product).filter(Product.type == ProductType.PRODUKT.value).count() == 0:
-            products_data = [
-                ("APP-001", "iPhone 15 Pro", 10, "szt"),
-                ("SAM-099", "Monitor Samsung 32'", 5, "szt"),
-                ("LAP-200", "Dell XPS 13", 7, "szt"),
-                ("CLV-301", "Klawiatura mechaniczna Logitech", 15, "szt"),
-                ("MS-050", "Mysz bezprzewodowa MX Master 3", 20, "szt"),
-            ]
-            products = [
-                Product(sku=sku, name=name, stock_quantity=stock, unit=unit, type=ProductType.PRODUKT.value)
-                for sku, name, stock, unit in products_data
-            ]
-            db.add_all(products)
-            db.commit()
-            print("Dodano produkty standardowe.")
+        # 2. Ensure we have products
+        # Format: (sku, name, unit, type, purchase_price, selling_price)
+        products_data = [
+            ("APP-001", "iPhone 15 Pro", "szt", ProductType.PRODUKT.value, 4500.0, 5299.0),
+            ("SAM-099", "Monitor Samsung 32'", "szt", ProductType.PRODUKT.value, 850.0, 1199.0),
+            ("LAP-200", "Dell XPS 13", "szt", ProductType.PRODUKT.value, 5200.0, 6499.0),
+            ("CLV-301", "Klawiatura Logitech", "szt", ProductType.PRODUKT.value, 150.0, 249.0),
+            ("MS-050", "Mysz MX Master", "szt", ProductType.PRODUKT.value, 220.0, 349.0),
+            ("STOL-DEB", "Stół Dębowy", "szt", ProductType.PRODUKT.value, 1200.0, 2100.0),
+            ("NOGA-01", "Noga stołowa", "szt", ProductType.POLPRODUKT.value, 45.0, 0.0),
+            ("BLAT-01", "Blat dębowy 160x80", "szt", ProductType.POLPRODUKT.value, 450.0, 0.0),
+            ("SRUB-01", "Zestaw śrub montażowych", "kpl", ProductType.POLPRODUKT.value, 5.0, 0.0),
+        ]
+        products = [
+            Product(
+                sku=sku, name=name, unit=unit, type=ptype, 
+                purchase_price=pp, selling_price=sp, stock_quantity=random.randint(5, 50)
+            )
+            for sku, name, unit, ptype, pp, sp in products_data
+        ]
+        db.add_all(products)
+        db.commit()
+        products = db.query(Product).all()
 
-        # 3. Półprodukty i Receptury (Złożone kombinacje)
-        if db.query(RecipeItem).count() == 0:
-            # --- Meble ---
-            # Półprodukty meblowe
-            noga = Product(sku="NOGA-01", name="Noga stołowa (Metal)", type=ProductType.POLPRODUKT.value, stock_quantity=200, unit="szt")
-            blat_drewno = Product(sku="BLAT-DRE", name="Blat dębowy 160x80", type=ProductType.POLPRODUKT.value, stock_quantity=40, unit="szt")
-            blat_szklo = Product(sku="BLAT-SZK", name="Blat szklany hartowany", type=ProductType.POLPRODUKT.value, stock_quantity=15, unit="szt")
-            uchwyt = Product(sku="UCH-01", name="Uchwyt szafki", type=ProductType.POLPRODUKT.value, stock_quantity=500, unit="szt")
-            front = Product(sku="FR-MDF", name="Front MDF biały", type=ProductType.POLPRODUKT.value, stock_quantity=100, unit="szt")
+        # 3. Generate Documents over the last year
+        now = datetime.now(timezone.utc)
+        doc_count = 0
+        
+        # Ranges: Last 7 days, Last 30 days, Last 12 months
+        # We'll generate about 150 documents total
+        for i in range(150):
+            # Distribute dates: 30% in last 7 days, 40% in last 30 days, 30% in last year
+            rand = random.random()
+            if rand < 0.3:
+                days_ago = random.randint(0, 6)
+            elif rand < 0.7:
+                days_ago = random.randint(7, 29)
+            else:
+                days_ago = random.randint(30, 360)
             
-            db.add_all([noga, blat_drewno, blat_szklo, uchwyt, front])
-            db.flush()
-
-            # Produkty gotowe meblowe
-            stol_deb = Product(sku="STOL-DEB", name="Stół Dębowy Loft", type=ProductType.PRODUKT.value, stock_quantity=0, unit="szt")
-            stol_szklo = Product(sku="STOL-SZK", name="Stół Szklany Modern", type=ProductType.PRODUKT.value, stock_quantity=0, unit="szt")
-            szafka = Product(sku="SZAF-01", name="Szafka nocna", type=ProductType.PRODUKT.value, stock_quantity=0, unit="szt")
+            created_at = now - timedelta(days=days_ago, hours=random.randint(0, 23), minutes=random.randint(0, 59))
             
-            db.add_all([stol_deb, stol_szklo, szafka])
-            db.flush()
-
-            # Receptury meblowe
-            db.add_all([
-                # Stół Dębowy: 1 blat + 4 nogi
-                RecipeItem(parent_product_id=stol_deb.id, component_product_id=blat_drewno.id, quantity=1),
-                RecipeItem(parent_product_id=stol_deb.id, component_product_id=noga.id, quantity=4),
+            # Weighted doc types: More PZ and WZ
+            doc_type = random.choices(
+                [DocType.PZ, DocType.WZ, DocType.PW, DocType.RW, DocType.ZW],
+                weights=[30, 40, 10, 10, 10]
+            )[0]
+            
+            contractor = random.choice(contractors) if doc_type in [DocType.PZ, DocType.WZ, DocType.ZW] else None
+            
+            doc = Document(
+                type=doc_type,
+                contractor_id=contractor.id if contractor else None,
+                created_by="seed_bot",
+                created_at=created_at
+            )
+            db.add(doc)
+            db.flush() # Get doc ID
+            
+            # Add 1-3 items per document
+            for _ in range(random.randint(1, 3)):
+                product = random.choice(products)
                 
-                # Stół Szklany: 1 blat szklany + 4 nogi
-                RecipeItem(parent_product_id=stol_szklo.id, component_product_id=blat_szklo.id, quantity=1),
-                RecipeItem(parent_product_id=stol_szklo.id, component_product_id=noga.id, quantity=4),
+                # Determine unit price based on document type
+                if doc_type in [DocType.PZ, DocType.PW, DocType.ZW]:
+                    base_price = product.purchase_price
+                else:
+                    base_price = product.selling_price
                 
-                # Szafka: 2 fronty + 2 uchwyty
-                RecipeItem(parent_product_id=szafka.id, component_product_id=front.id, quantity=2),
-                RecipeItem(parent_product_id=szafka.id, component_product_id=uchwyt.id, quantity=2),
-            ])
+                # Add a bit of random fluctuation (+/- 5%) to transactional price
+                transactional_price = round(base_price * (1 + random.uniform(-0.05, 0.05)), 2)
+                if transactional_price <= 0 and base_price > 0:
+                    transactional_price = base_price
 
-            # --- Zestawy Komputerowe ---
-            # Półprodukty elektroniczne
-            obudowa = Product(sku="CASE-ATX", name="Obudowa ATX", type=ProductType.POLPRODUKT.value, stock_quantity=50, unit="szt")
-            zasilacz = Product(sku="PSU-600", name="Zasilacz 600W Gold", type=ProductType.POLPRODUKT.value, stock_quantity=45, unit="szt")
-            plyta = Product(sku="MB-B550", name="Płyta główna B550", type=ProductType.POLPRODUKT.value, stock_quantity=30, unit="szt")
-            ram = Product(sku="RAM-16GB", name="Pamięć RAM 16GB", type=ProductType.POLPRODUKT.value, stock_quantity=120, unit="szt")
-            
-            db.add_all([obudowa, zasilacz, plyta, ram])
-            db.flush()
-
-            # Produkt gotowy: Komputer Stacjonarny
-            pc_office = Product(sku="PC-OFFICE", name="Komputer Biurowy Standard", type=ProductType.PRODUKT.value, stock_quantity=0, unit="szt")
-            db.add(pc_office)
-            db.flush()
-
-            # Receptura PC: 1 obudowa, 1 zasilacz, 1 płyta, 2x8GB RAM (ilość=2)
-            db.add_all([
-                RecipeItem(parent_product_id=pc_office.id, component_product_id=obudowa.id, quantity=1),
-                RecipeItem(parent_product_id=pc_office.id, component_product_id=zasilacz.id, quantity=1),
-                RecipeItem(parent_product_id=pc_office.id, component_product_id=plyta.id, quantity=1),
-                RecipeItem(parent_product_id=pc_office.id, component_product_id=ram.id, quantity=2),
-            ])
-
-            db.commit()
-            print("Dodano różnorodne półprodukty i receptury (Meble, PC).")
-
-        # 4. Dokumenty
-        if db.query(Document).count() == 0:
-            kontrahenci = db.query(Contractor).all()
-            produkty = db.query(Product).filter(Product.type == ProductType.PRODUKT.value).all()
-
-            for i in range(10):
-                doc_type = DocType.PZ if i < 5 else DocType.WZ
-                contractor = random.choice(kontrahenci)
-                doc = Document(
-                    type=doc_type,
-                    contractor_id=contractor.id,
-                    created_by="system_seed",
-                    created_at=datetime.now(timezone.utc)
-                )
-                db.add(doc)
-                db.flush()
-
-                product = random.choice(produkty)
                 item = DocumentItem(
                     document_id=doc.id,
                     product_id=product.id,
-                    quantity=random.randint(1, 10)
+                    quantity=random.randint(1, 10),
+                    unit_price=transactional_price
                 )
                 db.add(item)
+            
+            doc_count += 1
+            if doc_count % 50 == 0:
+                db.commit()
+                print(f"Dodano {doc_count} dokumentów...")
 
-            db.commit()
-            print("Dodano 10 dokumentów PZ/WZ.")
+        db.commit()
+        print(f"Seed zakończony pomyślnie. Dodano łącznie {doc_count} dokumentów z cenami transakcyjnymi.")
 
     except Exception as e:
-        print(f"Błąd: {e}")
+        print(f"Błąd podczas seedowania: {e}")
         db.rollback()
     finally:
         db.close()

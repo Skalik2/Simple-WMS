@@ -4,8 +4,8 @@ from app.models import ProductType
 
 def test_page_response_schema():
     items = [
-        ProductResponse(id=1, sku="SKU1", name="Product 1", type=ProductType.PRODUKT, unit="pcs", stock_quantity=10),
-        ProductResponse(id=2, sku="SKU2", name="Product 2", type=ProductType.PRODUKT, unit="pcs", stock_quantity=20)
+        ProductResponse(id=1, sku="SKU1", name="Product 1", type=ProductType.PRODUKT, unit="pcs", stock_quantity=10, purchase_price=10.0, selling_price=15.0),
+        ProductResponse(id=2, sku="SKU2", name="Product 2", type=ProductType.PRODUKT, unit="pcs", stock_quantity=20, purchase_price=20.0, selling_price=30.0)
     ]
     page_data = {
         "items": items,

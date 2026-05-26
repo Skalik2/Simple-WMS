@@ -7,9 +7,16 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: React.ReactNode;
+  size?: 'md' | 'lg' | 'xl';
 }
 
-export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
+export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, size = 'md' }) => {
+  const sizeClasses = {
+    md: 'max-w-lg',
+    lg: 'max-w-3xl',
+    xl: 'max-w-5xl'
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -25,9 +32,9 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="bg-surface-container-lowest w-full max-w-lg rounded-2xl shadow-2xl relative z-10 overflow-hidden border border-outline-variant"
+            className={`bg-surface-container-lowest w-full ${sizeClasses[size]} rounded-3xl shadow-2xl relative z-10 flex flex-col max-h-[90vh] border border-outline-variant transition-all duration-300`}
           >
-            <div className="px-6 py-4 border-b border-outline-variant flex items-center justify-between bg-surface-bright">
+            <div className="px-6 py-4 border-b border-outline-variant flex items-center justify-between bg-surface-bright flex-shrink-0">
               <h3 className="font-bold text-lg text-on-surface">{title}</h3>
               <button 
                 onClick={onClose}
@@ -36,7 +43,7 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
                 <X size={20} />
               </button>
             </div>
-            <div className="p-6">
+            <div className="p-6 overflow-y-auto">
               {children}
             </div>
           </motion.div>

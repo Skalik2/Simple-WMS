@@ -45,3 +45,29 @@ def test_read_report_stats_ranges():
     for r in ["7d", "30d", "1y"]:
         response = client.get(f"/api/reports/stats?range={r}")
         assert response.status_code == 200
+
+def test_read_report_stats_grouping_difference():
+    # Add data from 40 days ago
+    from app.models import Document, DocType
+    from datetime import datetime, timedelta
+    db = TestingSessionLocal()
+    now = datetime.now()
+    doc1 = Document(type=DocType.PZ, created_at=now - timedelta(days=10))
+    doc2 = Document(type=DocType.PZ, created_at=now - timedelta(days=40))
+    db.add_all([doc1, doc2])
+    db.commit()
+    db.close()
+
+    # 30d range
+    resp_30d = client.get("/api/reports/stats?range=30d")
+    data_30d = resp_30d.json()
+    assert data_30d["cards"]["total_ops"] == 1
+    for item in data_30d["chart_data"]:
+        assert len(item["name"]) == 10 # YYYY-MM-DD
+
+    # 1y range
+    resp_1y = client.get("/api/reports/stats?range=1y")
+    data_1y = resp_1y.json()
+    assert data_1y["cards"]["total_ops"] == 2
+    for item in data_1y["chart_data"]:
+        assert len(item["name"]) == 7 # YYYY-MM

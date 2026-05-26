@@ -2,23 +2,43 @@ import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2, Check } from 'lucide-react';
 import { Modal } from './ui/Modal';
 import { useAuth } from '@clerk/clerk-react';
+import { Product, Contractor } from '../types';
 
 interface NewDocumentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  initialType?: 'PZ' | 'WZ' | 'ZW' | 'RW';
+  initialType?: 'PZ' | 'WZ' | 'ZW' | 'RW' | 'PW';
 }
 
 export const NewDocumentModal = ({ isOpen, onClose, onSuccess, initialType = 'PZ' }: NewDocumentModalProps) => {
   const { getToken } = useAuth();
   
-  const [type, setType] = useState<'PZ' | 'WZ' | 'ZW' | 'RW'>(initialType);
+  const [type, setType] = useState<'PZ' | 'WZ' | 'ZW' | 'RW' | 'PW'>(initialType);
   const [contractorId, setContractorId] = useState('');
-  const [items, setItems] = useState([{ product_id: '', quantity: 1 }]);
+  const [items, setItems] = useState([{ product_id: '', quantity: 1, unit_price: 0 }]);
   
-  const [availableProducts, setAvailableProducts] = useState<any[]>([]);
-  const [availableContractors, setAvailableContractors] = useState<any[]>([]);
+  const [availableProducts, setAvailableProducts] = useState<Product[]>([]);
+  const [availableContractors, setAvailableContractors] = useState<Contractor[]>([]);
+
+  // Recalculate prices when type changes
+  useEffect(() => {
+    if (items.length > 0 && availableProducts.length > 0) {
+      setItems(prevItems => prevItems.map(item => {
+        if (!item.product_id) return item;
+        const product = availableProducts.find(p => p.id === parseInt(item.product_id));
+        if (!product) return item;
+
+        let newPrice = item.unit_price;
+        if (['PZ', 'PW', 'ZW'].includes(type)) {
+          newPrice = product.purchase_price;
+        } else if (['WZ', 'RW'].includes(type)) {
+          newPrice = product.selling_price;
+        }
+        return { ...item, unit_price: newPrice };
+      }));
+    }
+  }, [type, availableProducts]);
 
   useEffect(() => {
     if (isOpen) {
@@ -30,7 +50,7 @@ export const NewDocumentModal = ({ isOpen, onClose, onSuccess, initialType = 'PZ
     }
   }, [isOpen, initialType]);
 
-  const addItem = () => setItems([...items, { product_id: '', quantity: 1 }]);
+  const addItem = () => setItems([...items, { product_id: '', quantity: 1, unit_price: 0 }]);
   const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -43,7 +63,8 @@ export const NewDocumentModal = ({ isOpen, onClose, onSuccess, initialType = 'PZ
       contractor_id: (type === 'PZ' || type === 'WZ') ? parseInt(contractorId) : null,
       items: items.map(item => ({
         product_id: parseInt(item.product_id),
-        quantity: parseInt(item.quantity.toString())
+        quantity: parseInt(item.quantity.toString()),
+        unit_price: parseFloat(item.unit_price.toString())
       }))
     };
 
@@ -61,7 +82,7 @@ export const NewDocumentModal = ({ isOpen, onClose, onSuccess, initialType = 'PZ
         onSuccess();
         onClose();
         setContractorId('');
-        setItems([{ product_id: '', quantity: 1 }]);
+        setItems([{ product_id: '', quantity: 1, unit_price: 0 }]);
       } else {
         const errorData = await res.json();
         alert(`Błąd: ${JSON.stringify(errorData.detail || errorData)}`);
@@ -80,13 +101,14 @@ export const NewDocumentModal = ({ isOpen, onClose, onSuccess, initialType = 'PZ
             <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Typ</label>
             <select 
               value={type} 
-              onChange={(e) => setType(e.target.value as 'PZ' | 'WZ' | 'ZW' | 'RW')}
+              onChange={(e) => setType(e.target.value as 'PZ' | 'WZ' | 'ZW' | 'RW' | 'PW')}
               className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-sm"
             >
               <option value="PZ">PZ - Przyjęcie</option>
               <option value="WZ">WZ - Wydanie</option>
-              <option value="ZW">ZW - Zwrot Wewnętrzny</option>
+              <option value="PW">PW - Przyjęcie Wewnętrzne</option>
               <option value="RW">RW - Rozchód Wewnętrzny</option>
+              <option value="ZW">ZW - Zwrot Wewnętrzny</option>
             </select>
           </div>
           {(type === 'PZ' || type === 'WZ') && (
@@ -118,7 +140,18 @@ export const NewDocumentModal = ({ isOpen, onClose, onSuccess, initialType = 'PZ
                   value={item.product_id}
                   onChange={(e) => {
                     const newItems = [...items];
+                    const prodId = parseInt(e.target.value);
                     newItems[index].product_id = e.target.value;
+                    
+                    const product = availableProducts.find(p => p.id === prodId);
+                    if (product) {
+                      if (['PZ', 'PW', 'ZW'].includes(type)) {
+                        newItems[index].unit_price = product.purchase_price;
+                      } else if (['WZ', 'RW'].includes(type)) {
+                        newItems[index].unit_price = product.selling_price;
+                      }
+                    }
+                    
                     setItems(newItems);
                   }}
                   className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-sm"
@@ -133,10 +166,27 @@ export const NewDocumentModal = ({ isOpen, onClose, onSuccess, initialType = 'PZ
                 <input 
                   type="number" 
                   min="1"
+                  title="Ilość"
                   value={item.quantity}
                   onChange={(e) => {
                     const newItems = [...items];
                     newItems[index].quantity = parseInt(e.target.value);
+                    setItems(newItems);
+                  }}
+                  className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-sm"
+                />
+              </div>
+              <div className="w-32">
+                <input 
+                  type="number" 
+                  step="0.01"
+                  min="0"
+                  title="Cena jednostkowa"
+                  placeholder="Cena"
+                  value={item.unit_price}
+                  onChange={(e) => {
+                    const newItems = [...items];
+                    newItems[index].unit_price = parseFloat(e.target.value);
                     setItems(newItems);
                   }}
                   className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-sm"

@@ -22,7 +22,7 @@ interface ReportData {
   cards: {
     total_ops: number;
     top_product: string;
-    total_stock: number;
+    total_stock_value: number;
   };
 }
 
@@ -33,11 +33,14 @@ export const Reports = () => {
 
   const fetchReports = async (range: string) => {
     setLoading(true);
+    setReportData(null); // Clear previous data
     try {
       const res = await fetch(`/api/reports/stats?range=${range}`);
       if (res.ok) {
         const data = await res.json();
         setReportData(data);
+      } else {
+        console.error('Serwer zwrócił błąd:', res.status);
       }
     } catch (err) {
       console.error('Błąd podczas pobierania raportów:', err);
@@ -165,7 +168,7 @@ export const Reports = () => {
               </div>
               <div>
                 <p className="text-[10px] font-bold text-on-surface-variant uppercase">Wartość zapasów</p>
-                <p className="text-xl font-bold text-on-surface">{reportData.cards.total_stock}</p>
+                <p className="text-xl font-bold text-on-surface">{(reportData.cards.total_stock_value || 0).toFixed(2)} zł</p>
               </div>
             </div>
           </div>

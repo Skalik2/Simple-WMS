@@ -1,14 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Check } from 'lucide-react';
 import { Modal } from './ui/Modal';
-
-interface Product {
-  id: number;
-  sku: string;
-  name: string;
-  stock_quantity: number;
-  unit: string;
-}
+import { Product } from '../types';
 
 interface RecipeItem {
   component_product_id: number;

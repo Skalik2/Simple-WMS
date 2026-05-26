@@ -49,7 +49,7 @@ export const DocumentDetailsModal = ({ isOpen, onClose, document }: DocumentDeta
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`Szczegóły dokumentu #${document.id}`}>
+    <Modal isOpen={isOpen} onClose={onClose} title={`Szczegóły dokumentu #${document.id}`} size="xl">
       <div className="space-y-6">
         {/* Header Actions */}
         <div className="flex justify-end gap-3 print:hidden">
@@ -127,19 +127,34 @@ export const DocumentDetailsModal = ({ isOpen, onClose, document }: DocumentDeta
                   <th className="px-4 py-3">Nazwa Towaru</th>
                   <th className="px-4 py-3 text-right">Ilość</th>
                   <th className="px-4 py-3 text-center">Jm</th>
+                  <th className="px-4 py-3 text-right">Cena jedn.</th>
+                  <th className="px-4 py-3 text-right">Wartość</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant print:divide-gray-300">
-                {document.items.map((item, idx) => (
-                  <tr key={idx} className="text-sm">
-                    <td className="px-4 py-3 text-on-surface-variant">{idx + 1}</td>
-                    <td className="px-4 py-3 font-mono font-bold text-primary print:text-black">{item.product.sku}</td>
-                    <td className="px-4 py-3 font-medium">{item.product.name}</td>
-                    <td className="px-4 py-3 text-right font-bold">{item.quantity}</td>
-                    <td className="px-4 py-3 text-center text-on-surface-variant">{item.product.unit}</td>
-                  </tr>
-                ))}
+                {document.items.map((item, idx) => {
+                  const itemValue = (item.unit_price || 0) * item.quantity;
+                  return (
+                    <tr key={idx} className="text-sm">
+                      <td className="px-4 py-3 text-on-surface-variant">{idx + 1}</td>
+                      <td className="px-4 py-3 font-mono font-bold text-primary print:text-black">{item.product.sku}</td>
+                      <td className="px-4 py-3 font-medium">{item.product.name}</td>
+                      <td className="px-4 py-3 text-right font-bold">{item.quantity}</td>
+                      <td className="px-4 py-3 text-center text-on-surface-variant">{item.product.unit}</td>
+                      <td className="px-4 py-3 text-right">{(item.unit_price || 0).toFixed(2)} zł</td>
+                      <td className="px-4 py-3 text-right font-bold">{itemValue.toFixed(2)} zł</td>
+                    </tr>
+                  );
+                })}
               </tbody>
+              <tfoot className="bg-surface-container-low/50 font-bold border-t border-outline-variant print:bg-gray-50">
+                <tr>
+                  <td colSpan={6} className="px-4 py-3 text-right uppercase text-[10px] tracking-widest">Suma całkowita:</td>
+                  <td className="px-4 py-3 text-right text-primary print:text-black">
+                    {document.items.reduce((sum, item) => sum + ((item.unit_price || 0) * item.quantity), 0).toFixed(2)} zł
+                  </td>
+                </tr>
+              </tfoot>
             </table>
           </div>
 

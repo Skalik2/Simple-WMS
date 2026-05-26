@@ -56,7 +56,7 @@ export const Documents = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h2 className="text-3xl font-bold text-on-surface tracking-tight">Dokumenty</h2>
-          <p className="text-on-surface-variant">Zarządzaj dokumentami PZ, WZ, ZW i RW.</p>
+          <p className="text-on-surface-variant">Zarządzaj dokumentami PZ, WZ, PW, ZW i RW.</p>
         </div>
         <button 
           onClick={() => setIsModalOpen(true)}
@@ -100,7 +100,7 @@ export const Documents = () => {
                         {doc.type === 'PZ' ? 'Przyjęcie' : 
                          doc.type === 'WZ' ? 'Wydanie' : 
                          doc.type === 'ZW' ? 'Zwrot Wewnętrzny' : 
-                         doc.type === 'PW' ? 'Przychód Wewnętrzny' : 
+                         doc.type === 'PW' ? 'Przyjęcie Wewnętrzne' : 
                          'Rozchód Wewnętrzny'}
                       </span>
                     </div>

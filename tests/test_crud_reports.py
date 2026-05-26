@@ -65,3 +65,27 @@ def test_get_report_stats_with_data(db):
     assert len(stats["chart_data"]) > 0
     assert stats["chart_data"][0]["pz"] == 1
     assert stats["chart_data"][0]["wz"] == 0
+
+def test_get_report_stats_1y_range(db):
+    product = models.Product(name="P1", sku="S1", stock_quantity=10, type="PRODUKT", unit="szt")
+    db.add(product)
+    db.commit()
+    
+    now = datetime.now()
+    # One doc from 10 days ago
+    doc1 = models.Document(type=models.DocType.PZ, created_at=now - timedelta(days=10))
+    # One doc from 40 days ago
+    doc2 = models.Document(type=models.DocType.PZ, created_at=now - timedelta(days=40))
+    db.add_all([doc1, doc2])
+    db.commit()
+    
+    # 30d should only see doc1
+    stats_30d = crud.get_report_stats(db, date_range="30d")
+    assert stats_30d["cards"]["total_ops"] == 1
+    
+    # 1y should see both
+    stats_1y = crud.get_report_stats(db, date_range="1y")
+    assert stats_1y["cards"]["total_ops"] == 2
+    # And grouping should be by month (YYYY-MM)
+    for entry in stats_1y["chart_data"]:
+        assert len(entry["name"]) == 7 # YYYY-MM

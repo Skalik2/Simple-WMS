@@ -1,29 +1,38 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import func
-from datetime import datetime, timedelta, date
+from sqlalchemy import func, case
+from datetime import datetime, timedelta, date, timezone
 from fastapi import HTTPException
 from . import models, schemas
 
 def get_report_stats(db: Session, date_range: str = "7d"):
-    today = datetime.now()
+    today = datetime.now(timezone.utc)
+    
+    # Determine dialect to use correct SQL functions
+    is_sqlite = db.bind.dialect.name == "sqlite"
+
     if date_range == "30d":
         start_date = today - timedelta(days=30)
         group_by = func.date(models.Document.created_at)
     elif date_range == "1y":
         start_date = today - timedelta(days=365)
-        group_by = func.strftime('%Y-%m', models.Document.created_at)
+        if is_sqlite:
+            group_by = func.strftime('%Y-%m', models.Document.created_at)
+        else:
+            # PostgreSQL compatible
+            group_by = func.to_char(models.Document.created_at, 'YYYY-MM')
     else: # 7d
         start_date = today - timedelta(days=7)
         group_by = func.date(models.Document.created_at)
 
     # 1. Chart Data
+    # Use CASE instead of FILTER for broader database compatibility (including older SQLite versions)
     docs = db.query(
         group_by.label("label"),
-        func.count(models.Document.id).filter(models.Document.type.in_([models.DocType.PZ, models.DocType.PW, models.DocType.ZW])).label("pz"),
-        func.count(models.Document.id).filter(models.Document.type.in_([models.DocType.WZ, models.DocType.RW])).label("wz")
-    ).filter(models.Document.created_at >= start_date).group_by("label").order_by("label").all()
+        func.sum(case((models.Document.type.in_([models.DocType.PZ, models.DocType.PW, models.DocType.ZW]), 1), else_=0)).label("pz"),
+        func.sum(case((models.Document.type.in_([models.DocType.WZ, models.DocType.RW]), 1), else_=0)).label("wz")
+    ).filter(models.Document.created_at >= start_date).group_by(group_by).order_by("label").all()
 
-    chart_data = [{"name": d.label, "pz": d.pz, "wz": d.wz} for d in docs]
+    chart_data = [{"name": str(d.label), "pz": int(d.pz or 0), "wz": int(d.wz or 0)} for d in docs]
 
     # 2. Cards
     total_ops = db.query(models.Document).filter(models.Document.created_at >= start_date).count()
@@ -32,19 +41,19 @@ def get_report_stats(db: Session, date_range: str = "7d"):
     top_product_row = db.query(
         models.Product.name,
         func.sum(models.DocumentItem.quantity).label("total_qty")
-    ).join(models.DocumentItem).join(models.Document).filter(models.Document.created_at >= start_date).group_by(models.Product.id).order_by(func.sum(models.DocumentItem.quantity).desc()).first()
+    ).join(models.DocumentItem).join(models.Document).filter(models.Document.created_at >= start_date).group_by(models.Product.id, models.Product.name).order_by(func.sum(models.DocumentItem.quantity).desc()).first()
     
     top_product = top_product_row.name if top_product_row else "Brak"
     
-    # Total Stock Value (sum of all stock_quantity)
-    total_stock = db.query(func.sum(models.Product.stock_quantity)).scalar() or 0
+    # Total Stock Value (sum of stock_quantity * purchase_price)
+    total_stock_value = db.query(func.sum(models.Product.stock_quantity * models.Product.purchase_price)).scalar() or 0.0
 
     return {
         "chart_data": chart_data,
         "cards": {
             "total_ops": total_ops,
             "top_product": top_product,
-            "total_stock": total_stock
+            "total_stock_value": float(total_stock_value)
         }
     }
 
@@ -142,7 +151,8 @@ def create_document(db: Session, doc_data: schemas.DocumentCreate, user_id: str)
         db_item = models.DocumentItem(
             document_id=db_document.id,
             product_id=item_data.product_id,
-            quantity=item_data.quantity
+            quantity=item_data.quantity,
+            unit_price=item_data.unit_price
         )
         db.add(db_item)
 
@@ -169,6 +179,8 @@ def create_product(db: Session, product_data: schemas.ProductCreate):
         name=product_data.name,
         type=product_data.type,
         unit=product_data.unit,
+        purchase_price=product_data.purchase_price,
+        selling_price=product_data.selling_price,
         stock_quantity=0
     )
     db.add(db_product)

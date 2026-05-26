@@ -25,10 +25,13 @@ class ProductCreate(BaseModel):
     name: str
     type: ProductType
     unit: str
+    purchase_price: float = 0.0
+    selling_price: float = 0.0
 
 class DocumentItemCreate(BaseModel):
     product_id: int
     quantity: int
+    unit_price: float = 0.0
 
 class DocumentCreate(BaseModel):
     type: DocType
@@ -42,12 +45,15 @@ class ProductResponse(BaseModel):
     type: ProductType
     unit: str
     stock_quantity: int
+    purchase_price: float
+    selling_price: float
 
     model_config = ConfigDict(from_attributes=True)
 
 class DocumentItemResponse(BaseModel):
     product_id: int
     quantity: int
+    unit_price: float
     product: ProductResponse
 
     model_config = ConfigDict(from_attributes=True)
@@ -90,7 +96,7 @@ class ReportChartData(BaseModel):
 class ReportCards(BaseModel):
     total_ops: int
     top_product: str
-    total_stock: int
+    total_stock_value: float
 
 class ReportResponse(BaseModel):
     chart_data: List[ReportChartData]

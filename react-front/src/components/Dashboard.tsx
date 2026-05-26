@@ -123,7 +123,14 @@ export const Dashboard = ({ onActionClick }: DashboardProps) => {
   );
 };
 
-const StatCard = ({ title, value, icon, color }: any) => (
+interface StatCardProps {
+  title: string;
+  value: number;
+  icon: React.ReactNode;
+  color: string;
+}
+
+const StatCard = ({ title, value, icon, color }: StatCardProps) => (
   <div className="bg-surface-container-lowest border border-outline-variant p-6 rounded-2xl flex items-center gap-5">
     <div className={`p-4 rounded-xl text-white ${color}`}>{icon}</div>
     <div>

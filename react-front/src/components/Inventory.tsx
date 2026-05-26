@@ -5,16 +5,7 @@ import { Modal } from './ui/Modal';
 import { AssemblyModal } from './AssemblyModal';
 import { ProductDetailsModal } from './ProductDetailsModal';
 import { Pagination } from './ui/Pagination';
-
-// Typ określający budowę produktu z API
-interface Product {
-  id: number;
-  sku: string;
-  name: string;
-  type: string;
-  unit: string;
-  stock_quantity: number;
-}
+import { Product } from '../types';
 
 export const Inventory = () => {
   const [items, setItems] = useState<Product[]>([]);
@@ -71,6 +62,8 @@ export const Inventory = () => {
           name: formData.get('name'),
           type: 'PRODUKT', // lub POLPRODUKT
           unit: formData.get('unit'),
+          purchase_price: parseFloat(formData.get('purchase_price') as string) || 0,
+          selling_price: parseFloat(formData.get('selling_price') as string) || 0,
         })
       });
 
@@ -123,10 +116,12 @@ export const Inventory = () => {
           <table className="w-full text-left border-collapse">
             <thead className="bg-surface-container-low/50 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest border-b border-outline-variant/60">
               <tr>
-                <th className="px-6 py-4">ID / SKU</th>
-                <th className="px-6 py-4">Nazwa Towaru</th>
-                <th className="px-6 py-4">Ilość na stanie</th>
-                <th className="px-6 py-4">Typ</th>
+                <th className="px-4 lg:px-6 py-4 hidden md:table-cell">ID / SKU</th>
+                <th className="px-4 lg:px-6 py-4">Nazwa Towaru</th>
+                <th className="px-4 lg:px-6 py-4">Ilość</th>
+                <th className="px-4 lg:px-6 py-4 hidden lg:table-cell">Typ</th>
+                <th className="px-4 lg:px-6 py-4 text-right hidden sm:table-cell">Zakup</th>
+                <th className="px-4 lg:px-6 py-4 text-right">Sprzedaż</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-container-high transition-all relative min-h-[200px]">
@@ -146,17 +141,26 @@ export const Inventory = () => {
                   onClick={() => setSelectedProduct(item)}
                   className="hover:bg-surface-bright transition-colors cursor-pointer group"
                 >
-                  <td className="px-6 py-4 font-mono text-xs font-semibold text-primary">
+                  <td className="px-4 lg:px-6 py-4 font-mono text-xs font-semibold text-primary hidden md:table-cell">
                     [{item.id}] {item.sku}
                   </td>
-                  <td className="px-6 py-4 text-sm font-medium text-on-surface">
-                    {item.name}
+                  <td className="px-4 lg:px-6 py-4 text-sm font-medium text-on-surface">
+                    <div className="flex flex-col">
+                      <span>{item.name}</span>
+                      <span className="text-[10px] text-on-surface-variant md:hidden">SKU: {item.sku}</span>
+                    </div>
                   </td>
-                  <td className="px-6 py-4 text-sm font-bold text-on-surface">
+                  <td className="px-4 lg:px-6 py-4 text-sm font-bold text-on-surface whitespace-nowrap">
                     {item.stock_quantity} {item.unit}
                   </td>
-                  <td className="px-6 py-4 text-xs text-on-surface-variant uppercase">
+                  <td className="px-4 lg:px-6 py-4 text-xs text-on-surface-variant uppercase hidden lg:table-cell">
                     {item.type}
+                  </td>
+                  <td className="px-4 lg:px-6 py-4 text-sm text-on-surface text-right font-mono hidden sm:table-cell">
+                    {item.purchase_price?.toFixed(2)}
+                  </td>
+                  <td className="px-4 lg:px-6 py-4 text-sm font-bold text-on-surface text-right font-mono">
+                    {item.selling_price?.toFixed(2)} <span className="text-[10px] font-normal text-on-surface-variant">zł</span>
                   </td>
                 </motion.tr>
               ))}
@@ -192,6 +196,16 @@ export const Inventory = () => {
               <option value="szt">Sztuki (szt)</option>
               <option value="kg">Kilogramy (kg)</option>
             </select>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Cena zakupu (zł)</label>
+              <input name="purchase_price" type="number" step="0.01" min="0" defaultValue="0" required className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-sm focus:ring-2 focus:ring-primary/20" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Cena sprzedaży (zł)</label>
+              <input name="selling_price" type="number" step="0.01" min="0" defaultValue="0" required className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-sm focus:ring-2 focus:ring-primary/20" />
+            </div>
           </div>
           <div className="pt-4 flex gap-3">
             <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 px-4 py-2 bg-surface-container-high text-on-surface font-bold rounded-xl text-sm">Anuluj</button>

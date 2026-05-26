@@ -1,10 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from './ui/Modal';
 import { Plus, Trash2, Save } from 'lucide-react';
+import { Product } from '../types';
 
-export const RecipeEditModal = ({ isOpen, onClose, product, currentRecipe, onSave }: any) => {
-  const [items, setItems] = useState<any[]>([]);
-  const [allProducts, setAllProducts] = useState<any[]>([]);
+interface RecipeItem {
+  component_product_id: number;
+  quantity: number;
+  name: string;
+}
+
+interface RecipeEditModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  product: Product;
+  currentRecipe: RecipeItem[];
+  onSave: () => void;
+}
+
+export const RecipeEditModal = ({ isOpen, onClose, product, currentRecipe, onSave }: RecipeEditModalProps) => {
+  const [items, setItems] = useState<RecipeItem[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [selectedCompId, setSelectedCompId] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);

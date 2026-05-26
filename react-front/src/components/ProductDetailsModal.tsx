@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from './ui/Modal';
-import { Package, Edit2 } from 'lucide-react';
+import { Edit2, Tag, ShoppingCart, TrendingUp, Layers } from 'lucide-react';
 import { RecipeEditModal } from './RecipeEditModal';
+import { Product } from '../types';
 
 interface RecipeItem {
   component_product_id: number;
@@ -9,7 +10,14 @@ interface RecipeItem {
   name: string;
 }
 
-export const ProductDetailsModal = ({ product, isOpen, onClose, onUpdate }: any) => {
+interface ProductDetailsModalProps {
+  product: Product | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onUpdate: () => void;
+}
+
+export const ProductDetailsModal = ({ product, isOpen, onClose, onUpdate }: ProductDetailsModalProps) => {
   const [recipe, setRecipe] = useState<RecipeItem[]>([]);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
@@ -27,14 +35,42 @@ export const ProductDetailsModal = ({ product, isOpen, onClose, onUpdate }: any)
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={`Szczegóły: ${product.name}`}>
       <div className="space-y-6">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">SKU</label>
-            <p className="text-sm font-mono">{product.sku}</p>
+        <div className="grid grid-cols-2 gap-6">
+          <div className="flex items-start gap-3">
+            <div className="p-2 bg-surface-container-low rounded-lg text-primary">
+              <Tag size={18} />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">SKU</label>
+              <p className="text-sm font-mono">{product.sku}</p>
+            </div>
           </div>
-          <div>
-            <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Stan</label>
-            <p className="text-sm font-bold">{product.stock_quantity} {product.unit}</p>
+          <div className="flex items-start gap-3">
+            <div className="p-2 bg-surface-container-low rounded-lg text-primary">
+              <Layers size={18} />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Stan</label>
+              <p className="text-sm font-bold">{product.stock_quantity} {product.unit}</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <div className="p-2 bg-surface-container-low rounded-lg text-primary">
+              <ShoppingCart size={18} />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Cena zakupu</label>
+              <p className="text-sm font-bold text-primary">{(product.purchase_price || 0).toFixed(2)} zł</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <div className="p-2 bg-surface-container-low rounded-lg text-secondary">
+              <TrendingUp size={18} />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Cena sprzedaży</label>
+              <p className="text-sm font-bold text-secondary">{(product.selling_price || 0).toFixed(2)} zł</p>
+            </div>
           </div>
         </div>
 

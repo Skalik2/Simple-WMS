@@ -1,6 +1,6 @@
 import enum
 from datetime import datetime, timezone
-from sqlalchemy import Column, Integer, String, Enum as SQLEnum, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, Enum as SQLEnum, ForeignKey, DateTime, Float
 from sqlalchemy.orm import relationship
 
 from .database import Base
@@ -32,6 +32,8 @@ class Product(Base):
     type = Column(String, default=ProductType.PRODUKT.value)
     unit = Column(String, default="szt.")
     stock_quantity = Column(Integer, default=0)
+    purchase_price = Column(Float, default=0.0)
+    selling_price = Column(Float, default=0.0)
 
 class Document(Base):
     __tablename__ = 'documents'
@@ -57,6 +59,7 @@ class DocumentItem(Base):
     document_id = Column(Integer, ForeignKey('documents.id'))
     product_id = Column(Integer, ForeignKey('products.id'))
     quantity = Column(Integer)
+    unit_price = Column(Float, default=0.0)
     
     document = relationship("Document", back_populates="items")
     
