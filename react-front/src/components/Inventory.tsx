@@ -69,7 +69,7 @@ export const Inventory = () => {
         body: JSON.stringify({
           sku: formData.get('sku'),
           name: formData.get('name'),
-          type: 'PRODUKT', // lub POLPRODUKT
+          type: formData.get('type'),
           unit: formData.get('unit'),
           purchase_price: parseFloat(formData.get('purchase_price') as string) || 0,
           selling_price: parseFloat(formData.get('selling_price') as string) || 0,
@@ -198,6 +198,13 @@ export const Inventory = () => {
           <div className="space-y-1">
             <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">SKU / Kod</label>
             <input name="sku" type="text" required placeholder="SKU-001" className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-sm focus:ring-2 focus:ring-primary/20" />
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Typ produktu</label>
+            <select name="type" className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-sm focus:ring-2 focus:ring-primary/20 appearance-none">
+              <option value="PRODUKT">Produkt (Gotowy)</option>
+              <option value="POLPRODUKT">Półprodukt / Składnik</option>
+            </select>
           </div>
           <div className="space-y-1">
             <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Jednostka</label>

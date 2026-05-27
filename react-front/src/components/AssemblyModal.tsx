@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Check } from 'lucide-react';
 import { Modal } from './ui/Modal';
+import { useAuth } from '@clerk/clerk-react';
 import { Product } from '../types';
 
 interface RecipeItem {
@@ -14,6 +15,7 @@ export const AssemblyModal = ({ isOpen, onClose, onAssemblySuccess }: {
   onClose: () => void;
   onAssemblySuccess: () => void;
 }) => {
+  const { getToken } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -55,9 +57,13 @@ export const AssemblyModal = ({ isOpen, onClose, onAssemblySuccess }: {
 
     setLoading(true);
     try {
+      const token = await getToken();
       const res = await fetch('/api/products/assemble', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
         body: JSON.stringify({ product_id: selectedProductId, quantity })
       });
 
