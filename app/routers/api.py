@@ -4,7 +4,7 @@ from typing import List
 from ..dependencies import get_db, get_current_user_id
 from .. import schemas, crud
 
-router = APIRouter(prefix="/api")
+router = APIRouter(prefix="/api", redirect_slashes=True)
 
 @router.post("/documents")
 async def create_document(

@@ -21,11 +21,20 @@ export const Documents = () => {
     try {
       const res = await fetch(`/api/documents?page=${page}&page_size=${pageSize}`);
       if (res.ok) {
-        const data = await res.json();
-        if (isCancelled()) return;
-        setDocuments(data.items);
-        setTotalItems(data.total);
-        setCurrentPage(data.page);
+        const text = await res.text();
+        try {
+          const data = JSON.parse(text);
+          if (isCancelled()) return;
+          setDocuments(data.items);
+          setTotalItems(data.total);
+          setCurrentPage(data.page);
+        } catch (parseErr) {
+          console.error('Błąd parsowania JSON dla dokumentów. Otrzymana treść:', text);
+          throw parseErr;
+        }
+      } else {
+        const errorText = await res.text();
+        console.error(`Błąd API dokumentów (${res.status}):`, errorText);
       }
     } catch (err) {
       if (!isCancelled()) {

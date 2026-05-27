@@ -24,12 +24,21 @@ export const Inventory = () => {
     try {
       const res = await fetch(`/api/products?page=${page}&page_size=${pageSize}`);
       if (res.ok) {
-        const data = await res.json();
-        if (!isCancelled()) {
-          setItems(data.items);
-          setTotalItems(data.total);
-          setCurrentPage(data.page);
+        const text = await res.text();
+        try {
+          const data = JSON.parse(text);
+          if (!isCancelled()) {
+            setItems(data.items);
+            setTotalItems(data.total);
+            setCurrentPage(data.page);
+          }
+        } catch (parseErr) {
+          console.error('Błąd parsowania JSON dla produktów. Otrzymana treść:', text);
+          throw parseErr;
         }
+      } else {
+        const errorText = await res.text();
+        console.error(`Błąd API produktów (${res.status}):`, errorText);
       }
     } catch (err) {
       if (!isCancelled()) console.error('Błąd podczas pobierania produktów:', err);

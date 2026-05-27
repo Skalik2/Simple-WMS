@@ -37,10 +37,17 @@ export const Reports = () => {
     try {
       const res = await fetch(`/api/reports/stats?range=${range}`);
       if (res.ok) {
-        const data = await res.json();
-        setReportData(data);
+        const text = await res.text();
+        try {
+          const data = JSON.parse(text);
+          setReportData(data);
+        } catch (parseErr) {
+          console.error('Błąd parsowania JSON dla raportów. Otrzymana treść:', text);
+          throw parseErr;
+        }
       } else {
-        console.error('Serwer zwrócił błąd:', res.status);
+        const errorText = await res.text();
+        console.error(`Błąd API raportów (${res.status}):`, errorText);
       }
     } catch (err) {
       console.error('Błąd podczas pobierania raportów:', err);
