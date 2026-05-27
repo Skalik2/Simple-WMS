@@ -41,6 +41,21 @@
   body {
     @apply bg-background text-on-background font-sans antialiased;
   }
+  @media print {
+    @page {
+      margin: 0; 
+    }
+    
+    body {
+      @apply bg-white text-black;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    * {
+      transform: none !important;
+    }
+  }
 }
 
 .markdown-body {

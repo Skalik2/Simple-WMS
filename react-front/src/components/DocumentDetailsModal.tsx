@@ -49,8 +49,8 @@ export const DocumentDetailsModal = ({ isOpen, onClose, document }: DocumentDeta
   return (
     <Modal isOpen={isOpen && !!document} onClose={onClose} title={`Szczegóły dokumentu #${document?.id || ''}`} size="xl">
       {document && (
-        <div className="space-y-6">
-          {/* Header Actions */}
+        <div className="space-y-6 print:space-y-0 print:bg-white">
+          {/* Przycisk Drukowania - Ukryty na wydruku */}
           <div className="flex justify-end gap-3 print:hidden">
             <button
               onClick={handlePrint}
@@ -61,54 +61,63 @@ export const DocumentDetailsModal = ({ isOpen, onClose, document }: DocumentDeta
             </button>
           </div>
 
-          {/* Print Content */}
-          <div ref={printRef} className="print:p-8 print:text-black">
-            {/* Print Only Header */}
-            <div className="hidden print:block mb-8 border-b-2 border-primary pb-6">
+          {/* ZAWARTOŚĆ DRUKOWANA */}
+          <div ref={printRef} className="print:p-[15mm] print:text-black print:bg-white print:min-h-screen">
+            
+            {/* Nagłówek Dokumentu */}
+            <div className="hidden print:block mb-10 border-b-[3px] border-black pb-6">
               <div className="flex justify-between items-start">
                 <div>
-                  <h1 className="text-3xl font-black text-primary">Simple WMS</h1>
-                  <p className="text-sm font-medium text-gray-600">Global Logistics Solution</p>
+                  <h1 className="text-3xl font-black text-black tracking-tight">Simple WMS</h1>
+                  <p className="text-sm font-medium text-gray-800">Global Logistics Solution</p>
                 </div>
                 <div className="text-right">
-                  <h2 className="text-xl font-bold">{getDocFullTitle(document.type)}</h2>
-                  <p className="text-lg font-mono font-bold">Nr: {document.type}/{document.id}/{new Date(document.created_at).getFullYear()}</p>
+                  <h2 className="text-2xl font-bold uppercase">{getDocFullTitle(document.type)}</h2>
+                  <p className="text-lg font-mono font-bold mt-1">Nr: {document.type}/{document.id}/{new Date(document.created_at).getFullYear()}</p>
                 </div>
               </div>
             </div>
 
-            {/* Info Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            {/* Informacje o Kliencie i Dacie */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10 print:grid-cols-2 print:gap-12">
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
                   <div className="p-2 bg-surface-container-low rounded-lg text-primary print:hidden">
                     <Calendar size={18} />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Data wystawienia</p>
-                    <p className="font-medium">{formattedDate}</p>
+                    <p className="text-[10px] font-bold text-on-surface-variant print:text-gray-500 uppercase tracking-widest">Data wystawienia</p>
+                    <p className="font-medium print:font-semibold print:text-black">{formattedDate}</p>
                   </div>
                 </div>
+                
+                {/* SEKCJA KONTRAHENTA Z NIP */}
                 <div className="flex items-start gap-3">
                   <div className="p-2 bg-surface-container-low rounded-lg text-primary print:hidden">
                     <User size={18} />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Kontrahent</p>
-                    <p className="font-bold text-lg">{document.contractor_name || 'Dokument wewnętrzny'}</p>
+                    <p className="text-[10px] font-bold text-on-surface-variant print:text-gray-500 uppercase tracking-widest">Kontrahent</p>
+                    <p className="font-bold text-lg print:text-black">{document.contractor_name || 'Dokument wewnętrzny'}</p>
+                    {document.contractor_nip && (
+                      <p className="text-sm text-on-surface-variant print:text-black mt-0.5">
+                        NIP: <span className="font-mono font-semibold">{document.contractor_nip}</span>
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
+              
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
                   <div className="p-2 bg-surface-container-low rounded-lg text-primary print:hidden">
                     <Hash size={18} />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Typ dokumentu</p>
-                    <span className={`inline-block px-2 py-0.5 rounded text-xs font-bold uppercase ${
-                      (document.type === 'PZ' || document.type === 'ZW' || document.type === 'PW') ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
-                    }`}>
+                    <p className="text-[10px] font-bold text-on-surface-variant print:text-gray-500 uppercase tracking-widest">Typ dokumentu</p>
+                    <span className={`inline-block px-2 py-0.5 rounded text-xs font-bold uppercase print:px-0 print:bg-transparent print:text-black print:text-base
+                      ${(document.type === 'PZ' || document.type === 'ZW' || document.type === 'PW') ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}
+                    `}>
                       {getDocLabel(document.type)}
                     </span>
                   </div>
@@ -116,38 +125,38 @@ export const DocumentDetailsModal = ({ isOpen, onClose, document }: DocumentDeta
               </div>
             </div>
 
-            {/* Items Table */}
-            <div className="border border-outline-variant rounded-2xl overflow-hidden print:border-black">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-surface-container-low text-[10px] font-bold text-on-surface-variant uppercase tracking-widest border-b border-outline-variant print:bg-gray-100 print:text-black">
+            {/* Tabela Pozycji */}
+            <div className="border border-outline-variant rounded-2xl overflow-hidden print:border-none print:rounded-none">
+              <table className="w-full text-left border-collapse print:border-y-2 print:border-black">
+                <thead className="bg-surface-container-low text-[10px] font-bold text-on-surface-variant uppercase tracking-widest border-b border-outline-variant print:bg-transparent print:border-black print:border-b-2 print:text-black print:text-xs">
                   <tr>
-                    <th className="px-4 py-3">LP</th>
-                    <th className="px-4 py-3">SKU</th>
-                    <th className="px-4 py-3 text-right">Ilość</th>
-                    <th className="px-4 py-3 text-center">Jm</th>
-                    <th className="px-4 py-3 text-right">Cena jedn.</th>
-                    <th className="px-4 py-3 text-right">Wartość</th>
+                    <th className="px-4 py-3 print:px-2">LP</th>
+                    <th className="px-4 py-3 print:px-2">SKU</th>
+                    <th className="px-4 py-3 print:px-2 text-right">Ilość</th>
+                    <th className="px-4 py-3 print:px-2 text-center">Jm</th>
+                    <th className="px-4 py-3 print:px-2 text-right">Cena jedn.</th>
+                    <th className="px-4 py-3 print:px-2 text-right">Wartość</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-outline-variant print:divide-gray-300">
+                <tbody className="divide-y divide-outline-variant print:divide-black/20">
                   {document.items.map((item, idx) => {
                     const itemValue = (item.unit_price || 0) * item.quantity;
                     return (
-                      <tr key={idx} className="text-sm">
-                        <td className="px-4 py-3 text-on-surface-variant">{idx + 1}</td>
-                        <td className="px-4 py-3 font-mono font-bold text-primary print:text-black">{item.product.sku}</td>
-                        <td className="px-4 py-3 text-right font-bold">{item.quantity}</td>
-                        <td className="px-4 py-3 text-center text-on-surface-variant">{item.product.unit}</td>
-                        <td className="px-4 py-3 text-right">{(item.unit_price || 0).toFixed(2)} zł</td>
-                        <td className="px-4 py-3 text-right font-bold">{itemValue.toFixed(2)} zł</td>
+                      <tr key={idx} className="text-sm print:text-base print:text-black">
+                        <td className="px-4 py-3 print:px-2 text-on-surface-variant print:text-black">{idx + 1}</td>
+                        <td className="px-4 py-3 print:px-2 font-mono font-bold text-primary print:text-black">{item.product.sku}</td>
+                        <td className="px-4 py-3 print:px-2 text-right font-bold">{item.quantity}</td>
+                        <td className="px-4 py-3 print:px-2 text-center text-on-surface-variant print:text-black">{item.product.unit}</td>
+                        <td className="px-4 py-3 print:px-2 text-right">{(item.unit_price || 0).toFixed(2)} zł</td>
+                        <td className="px-4 py-3 print:px-2 text-right font-bold">{itemValue.toFixed(2)} zł</td>
                       </tr>
                     );
                   })}
                 </tbody>
-                <tfoot className="bg-surface-container-low/50 font-bold border-t border-outline-variant print:bg-gray-50">
+                <tfoot className="bg-surface-container-low/50 font-bold border-t border-outline-variant print:bg-transparent print:border-black print:border-t-2 print:text-black print:text-base">
                   <tr>
-                    <td colSpan={6} className="px-4 py-3 text-right uppercase text-[10px] tracking-widest">Suma całkowita:</td>
-                    <td className="px-4 py-3 text-right text-primary print:text-black">
+                    <td colSpan={5} className="px-4 py-4 print:px-2 text-right uppercase text-[10px] tracking-widest print:text-xs">Suma całkowita:</td>
+                    <td className="px-4 py-4 print:px-2 text-right text-primary print:text-black text-lg">
                       {document.items.reduce((sum, item) => sum + ((item.unit_price || 0) * item.quantity), 0).toFixed(2)} zł
                     </td>
                   </tr>
@@ -155,16 +164,20 @@ export const DocumentDetailsModal = ({ isOpen, onClose, document }: DocumentDeta
               </table>
             </div>
 
-            {/* Print Footer */}
-            <div className="hidden print:grid grid-cols-2 gap-12 mt-20 text-center text-sm">
-              <div className="border-t border-black pt-4">
-                <p className="font-bold">Odebrał</p>
-                <p className="text-[10px] text-gray-500 mt-8">(data i podpis)</p>
+            {/* Stopka z Podpisami */}
+            <div className="hidden print:grid grid-cols-2 gap-24 mt-24 text-center text-sm print:text-black">
+              <div>
+                <div className="border-t border-black pt-4 mx-8">
+                  <p className="font-bold">Odebrał</p>
+                  <p className="text-[10px] text-gray-500 mt-10">(data i czytelny podpis)</p>
+                </div>
               </div>
-              <div className="border-t border-black pt-4">
-                <p className="font-bold">Wystawił</p>
-                <p className="text-xs mt-1">{document.created_by || 'System WMS'}</p>
-                <p className="text-[10px] text-gray-500 mt-4">(pieczęć i podpis)</p>
+              <div>
+                <div className="border-t border-black pt-4 mx-8">
+                  <p className="font-bold">Wystawił</p>
+                  <p className="text-xs mt-1 font-semibold">{document.created_by || 'System WMS'}</p>
+                  <p className="text-[10px] text-gray-500 mt-6">(pieczęć i podpis)</p>
+                </div>
               </div>
             </div>
           </div>
