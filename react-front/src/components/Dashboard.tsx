@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Package, Users, FileText, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import { motion } from 'motion/react';
-import { ACTION_CARDS } from '../constants';
+import { ACTION_CARDS, API_URL } from '../constants';
 import { DocumentDetailsModal } from './DocumentDetailsModal';
 import { Document } from '../types';
 
@@ -16,14 +16,14 @@ export const Dashboard = ({ onActionClick }: DashboardProps) => {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   useEffect(() => {
-    fetch('/api/documents?page_size=5')
+    fetch(`${API_URL}/api/documents?page_size=5`)
       .then(res => res.json())
       .then(data => setRecentDocs(data.items || []));
 
     Promise.all([
-      fetch('/api/products?page_size=1').then(res => res.json()),
-      fetch('/api/contractors?page_size=1').then(res => res.json()),
-      fetch('/api/documents?page_size=1').then(res => res.json())
+      fetch(`${API_URL}/api/products?page_size=1`).then(res => res.json()),
+      fetch(`${API_URL}/api/contractors?page_size=1`).then(res => res.json()),
+      fetch(`${API_URL}/api/documents?page_size=1`).then(res => res.json())
     ]).then(([p, c, d]) => {
       setStats({ 
         products: p.total || 0, 

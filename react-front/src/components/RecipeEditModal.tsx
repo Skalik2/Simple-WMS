@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from './ui/Modal';
 import { Plus, Trash2, Save } from 'lucide-react';
+import { API_URL } from '../constants';
 import { Product } from '../types';
 
 interface RecipeItem {
@@ -27,7 +28,7 @@ export const RecipeEditModal = ({ isOpen, onClose, product, currentRecipe, onSav
   useEffect(() => {
     if (isOpen) {
       setItems(currentRecipe.map((r: any) => ({ ...r })));
-      fetch('/api/products?page_size=1000')
+      fetch(`${API_URL}/api/products?page_size=1000`)
         .then(res => res.json())
         .then(data => {
           // Filter out current product and non-semi-finished products
@@ -60,7 +61,7 @@ export const RecipeEditModal = ({ isOpen, onClose, product, currentRecipe, onSav
   const handleSave = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/recipes', {
+      const res = await fetch(`${API_URL}/api/recipes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

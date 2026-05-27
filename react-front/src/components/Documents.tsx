@@ -5,6 +5,7 @@ import { NewDocumentModal } from './NewDocumentModal';
 import { DocumentDetailsModal } from './DocumentDetailsModal';
 import { Pagination } from './ui/Pagination';
 import { Document } from '../types';
+import { API_URL } from '../constants';
 
 export const Documents = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -19,7 +20,7 @@ export const Documents = () => {
   const fetchDocuments = async (page: number = 1, isCancelled: () => boolean = () => false) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/documents?page=${page}&page_size=${pageSize}`);
+      const res = await fetch(`${API_URL}/api/documents?page=${page}&page_size=${pageSize}`);
       if (res.ok) {
         const text = await res.text();
         try {

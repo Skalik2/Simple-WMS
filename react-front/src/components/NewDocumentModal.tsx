@@ -3,6 +3,7 @@ import { X, Plus, Trash2, Check } from 'lucide-react';
 import { Modal } from './ui/Modal';
 import { useAuth } from '@clerk/clerk-react';
 import { Product, Contractor } from '../types';
+import { API_URL } from '../constants';
 
 interface NewDocumentModalProps {
   isOpen: boolean;
@@ -44,9 +45,9 @@ export const NewDocumentModal = ({ isOpen, onClose, onSuccess, initialType = 'PZ
     if (isOpen) {
       setType(initialType);
       // Fetch products (first 1000 for dropdown)
-      fetch('/api/products?page_size=1000').then(res => res.json()).then(data => setAvailableProducts(data.items || []));
+      fetch(`${API_URL}/api/products?page_size=1000`).then(res => res.json()).then(data => setAvailableProducts(data.items || []));
       // Fetch contractors (first 1000 for dropdown)
-      fetch('/api/contractors?page_size=1000').then(res => res.json()).then(data => setAvailableContractors(data.items || []));
+      fetch(`${API_URL}/api/contractors?page_size=1000`).then(res => res.json()).then(data => setAvailableContractors(data.items || []));
     }
   }, [isOpen, initialType]);
 
@@ -69,7 +70,7 @@ export const NewDocumentModal = ({ isOpen, onClose, onSuccess, initialType = 'PZ
     };
 
     try {
-      const res = await fetch('/api/documents', {
+      const res = await fetch(`${API_URL}/api/documents`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

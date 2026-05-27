@@ -3,6 +3,7 @@ import { Check } from 'lucide-react';
 import { Modal } from './ui/Modal';
 import { useAuth } from '@clerk/clerk-react';
 import { Product } from '../types';
+import { API_URL } from '../constants';
 
 interface RecipeItem {
   component_product_id: number;
@@ -24,7 +25,7 @@ export const AssemblyModal = ({ isOpen, onClose, onAssemblySuccess }: {
 
   useEffect(() => {
     if (isOpen) {
-      fetch('/api/products?page_size=1000')
+      fetch(`${API_URL}/api/products?page_size=1000`)
         .then(res => {
           if (!res.ok) throw new Error('Failed to fetch products');
           return res.json();
@@ -36,7 +37,7 @@ export const AssemblyModal = ({ isOpen, onClose, onAssemblySuccess }: {
 
   useEffect(() => {
     if (selectedProductId) {
-      fetch(`/api/products/${selectedProductId}/recipe`)
+      fetch(`${API_URL}/api/products/${selectedProductId}/recipe`)
         .then(res => {
           if (!res.ok) throw new Error('Failed to fetch recipe');
           return res.json();
@@ -58,7 +59,7 @@ export const AssemblyModal = ({ isOpen, onClose, onAssemblySuccess }: {
     setLoading(true);
     try {
       const token = await getToken();
-      const res = await fetch('/api/products/assemble', {
+      const res = await fetch(`${API_URL}/api/products/assemble`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

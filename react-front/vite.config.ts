@@ -13,13 +13,13 @@ export default defineConfig(({mode}) => {
       },
     },
     server: {
-      port: 3000,
+      // port: 3000,
       host: '0.0.0.0',
       hmr: process.env.DISABLE_HMR !== 'true',
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
       proxy: {
         '/api': {
-          target: env.VITE_API_URL || 'http://127.0.0.1:8000',
+          target: env.VITE_API_URL || 'https://simple-wms.onrender.com',
           changeOrigin: true,
           secure: false,
         }

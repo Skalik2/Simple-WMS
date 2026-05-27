@@ -12,6 +12,7 @@ import {
   Area
 } from 'recharts';
 import { TrendingUp, TrendingDown, Activity, Box, ClipboardList, Database } from 'lucide-react';
+import { API_URL } from '../constants';
 
 interface ReportData {
   chart_data: {
@@ -35,7 +36,7 @@ export const Reports = () => {
     setLoading(true);
     setReportData(null); // Clear previous data
     try {
-      const res = await fetch(`/api/reports/stats?range=${range}`);
+      const res = await fetch(`${API_URL}/api/reports/stats?range=${range}`);
       if (res.ok) {
         const text = await res.text();
         try {

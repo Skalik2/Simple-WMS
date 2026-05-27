@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import { Modal } from './ui/Modal';
 import { Pagination } from './ui/Pagination';
 import { Contractor } from '../types';
+import { API_URL } from '../constants';
 
 export const Contractors = () => {
   const [contractors, setContractors] = useState<Contractor[]>([]);
@@ -19,7 +20,7 @@ export const Contractors = () => {
   const fetchContractors = async (page: number = 1, isCancelled?: () => boolean) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/contractors?page=${page}&page_size=${pageSize}`);
+      const res = await fetch(`${API_URL}/api/contractors?page=${page}&page_size=${pageSize}`);
       if (res.ok) {
         const data = await res.json();
         if (isCancelled && isCancelled()) return;
@@ -53,7 +54,7 @@ export const Contractors = () => {
       nip: formData.get('nip') || null,
     };
     
-    const url = editingContractor ? `/api/contractors/${editingContractor.id}` : '/api/contractors';
+    const url = editingContractor ? `${API_URL}/api/contractors/${editingContractor.id}` : `${API_URL}/api/contractors`;
     const method = editingContractor ? 'PUT' : 'POST';
 
     try {
@@ -81,7 +82,7 @@ export const Contractors = () => {
     }
 
     try {
-      const res = await fetch(`/api/contractors/${id}`, {
+      const res = await fetch(`${API_URL}/api/contractors/${id}`, {
         method: 'DELETE'
       });
 

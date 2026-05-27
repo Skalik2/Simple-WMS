@@ -129,3 +129,5 @@ export const CONTRACTORS = [
   { id: 'K-003', name: 'Eko-Paczka Sp. j.', nip: '6469876543', city: 'Wrocław', type: 'Odbiorca' },
   { id: 'K-004', name: 'Magazyn Centralny', nip: '1234567890', city: 'Łódź', type: 'Wewnętrzny' },
 ];
+
+export const API_URL = import.meta.env.VITE_API_URL || 'https://simple-wms.onrender.com';

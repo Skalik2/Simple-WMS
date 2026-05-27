@@ -3,6 +3,7 @@ import { Modal } from './ui/Modal';
 import { Edit2, Tag, ShoppingCart, TrendingUp, Layers } from 'lucide-react';
 import { RecipeEditModal } from './RecipeEditModal';
 import { Product } from '../types';
+import { API_URL } from '../constants';
 
 interface RecipeItem {
   component_product_id: number;
@@ -23,7 +24,7 @@ export const ProductDetailsModal = ({ product, isOpen, onClose, onUpdate }: Prod
 
   useEffect(() => {
     if (isOpen && product) {
-      fetch(`/api/products/${product.id}/recipe`)
+      fetch(`${API_URL}/api/products/${product.id}/recipe`)
         .then(res => res.json())
         .then(data => setRecipe(data))
         .catch(err => console.error(err));
@@ -112,7 +113,7 @@ export const ProductDetailsModal = ({ product, isOpen, onClose, onUpdate }: Prod
             onSave={() => {
               setIsEditModalOpen(false);
               // Refresh recipe after save
-              fetch(`/api/products/${product.id}/recipe`)
+              fetch(`${API_URL}/api/products/${product.id}/recipe`)
                 .then(res => res.json())
                 .then(data => setRecipe(data));
               onUpdate(); // Trigger refresh in inventory

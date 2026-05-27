@@ -6,6 +6,7 @@ import { AssemblyModal } from './AssemblyModal';
 import { ProductDetailsModal } from './ProductDetailsModal';
 import { Pagination } from './ui/Pagination';
 import { Product } from '../types';
+import { API_URL } from '../constants';
 
 export const Inventory = () => {
   const [items, setItems] = useState<Product[]>([]);
@@ -22,7 +23,7 @@ export const Inventory = () => {
   const fetchProducts = async (page: number = 1, isCancelled: () => boolean = () => false) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/products?page=${page}&page_size=${pageSize}`);
+      const res = await fetch(`${API_URL}/api/products?page=${page}&page_size=${pageSize}`);
       if (res.ok) {
         const text = await res.text();
         try {
@@ -61,7 +62,7 @@ export const Inventory = () => {
     const formData = new FormData(e.currentTarget);
     
     try {
-      const res = await fetch('/api/products', {
+      const res = await fetch(`${API_URL}/api/products`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
